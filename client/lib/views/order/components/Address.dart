@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
-import 'package:damd_trabalho_1/models/Order.dart';
+import 'package:damd_trabalho_1/models/Address.dart';
 
 class AddressComponent extends StatelessWidget {
-  final Order order;
-  const AddressComponent({super.key, required this.order});
+  final Address address;
+  const AddressComponent({super.key, required this.address});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,7 @@ class AddressComponent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      order.address.shortAddress,
+                      address.shortAddress,
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: Tokens.fontSize14,
@@ -45,7 +45,7 @@ class AddressComponent extends StatelessWidget {
                     ),
                     const SizedBox(height: Tokens.borderSize2),
                     Text(
-                      order.address.cityState,
+                      address.cityState,
                       style: TextStyle(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontSize: Tokens.fontSize14,

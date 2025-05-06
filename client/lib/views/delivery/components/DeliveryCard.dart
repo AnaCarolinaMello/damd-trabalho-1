@@ -1,0 +1,151 @@
+import 'package:flutter/material.dart';
+import 'package:damd_trabalho_1/theme/Tokens.dart';
+import 'package:damd_trabalho_1/models/Order.dart';
+import 'package:damd_trabalho_1/components/Card.dart';
+import 'package:damd_trabalho_1/components/ActionButton.dart';
+import 'package:damd_trabalho_1/utils/index.dart';
+
+class DeliveryCard extends StatelessWidget {
+  final Order order;
+
+  const DeliveryCard({super.key, required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return CustomCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          // Cabeçalho do card
+          Padding(
+            padding: const EdgeInsets.all(Tokens.spacing16),
+            child: Row(
+              children: [
+                // Ícone do estabelecimento
+                Container(
+                  width: Tokens.spacing48,
+                  height: Tokens.spacing48,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(Tokens.radius8),
+                  ),
+                  child: Icon(
+                    Utils.getIconForOrderType(order.name),
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: Tokens.spacing12),
+
+                // Detalhes do pedido
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            order.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: Tokens.fontSize16,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'R\$ ${order.deliveryFee.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: Tokens.fontSize16,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: Tokens.spacing4),
+                      Text(
+                        '${order.date} ${order.time}',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: Tokens.fontSize14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.only(left: Tokens.spacing16, right: Tokens.spacing16, bottom: Tokens.spacing16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text(
+                  order.address.shortAddress,
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                Text(
+                  order.address.cityState,
+                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          // Separador
+          Divider(
+            height: Tokens.borderSize1,
+            thickness: Tokens.borderSize1,
+            color: theme.colorScheme.surfaceVariant,
+          ),
+
+          // Botões de ação
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: Tokens.spacing8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ActionButton(
+                  label: 'Ver rota',
+                  icon: Icons.map_outlined,
+                  onTap: () {
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => OrderDetail(
+                    //       orderId: order.id,
+                    //       isActive: isActive,
+                    //     ),
+                    //   ),
+                    // );
+                  },
+                ),
+                ActionButton(
+                  label: 'Aceitar',
+                  isPrimary: true,
+                  icon: Icons.check_circle_outline,
+                  onTap: () {
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => OrderDetail(
+                    //       orderId: order.id,
+                    //       isActive: isActive,
+                    //     ),
+                    //   ),
+                    // );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

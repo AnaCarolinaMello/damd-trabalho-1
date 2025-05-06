@@ -125,7 +125,7 @@ class _OrderDetailState extends State<OrderDetail> {
             const Divider(),
 
             // Endereço de entrega
-            AddressComponent(order: order),
+            AddressComponent(address: order.address),
 
             // Botão de rastreamento para pedidos ativos
             if (widget.isActive)

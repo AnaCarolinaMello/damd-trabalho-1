@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:damd_trabalho_1/services/ThemeNotifier.dart';
 import 'package:damd_trabalho_1/theme/Theme.dart';
@@ -8,6 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Lock orientation to portrait mode
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   
   // Initialize shared preferences
   await SharedPreferences.getInstance();

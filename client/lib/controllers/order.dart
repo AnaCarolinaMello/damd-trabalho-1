@@ -158,4 +158,9 @@ class OrderController {
   static Future<Order> getOrder(String id) async {
     return orders.firstWhere((order) => order.id == id);
   }
+
+  static Future<Order> getAcceptOrder(String driverId) async {
+    final order = orders[0];
+    return order;
+  }
 }

@@ -6,11 +6,13 @@ import 'package:damd_trabalho_1/utils/index.dart';
 class Shop extends StatelessWidget {
   final Order order;
   final bool isActive;
+  final EdgeInsets? padding;
 
   const Shop({
     super.key,
     required this.order,
     required this.isActive,
+    this.padding,
   });
 
   @override
@@ -18,7 +20,7 @@ class Shop extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.all(Tokens.spacing16),
+      padding: padding ?? const EdgeInsets.all(Tokens.spacing16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

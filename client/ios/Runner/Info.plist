@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Esta aplicação precisa acessar a câmera para capturar fotos de confirmação de entrega.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Esta aplicação precisa acessar a galeria para salvar fotos de confirmação de entrega.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Esta aplicação precisa acessar o microfone para gravar vídeos de confirmação de entrega.</string>
 </dict>
 </plist>

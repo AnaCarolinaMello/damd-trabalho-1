@@ -4,6 +4,7 @@ import 'package:damd_trabalho_1/views/register/pages/Index.dart';
 import 'package:damd_trabalho_1/views/map/pages/Tracking.dart';
 import 'package:damd_trabalho_1/views/profile/pages/Profile.dart';
 import 'package:damd_trabalho_1/views/order/pages/Orders.dart';
+import 'package:damd_trabalho_1/views/delivery/pages/Index.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -24,19 +25,26 @@ class _MainScreenState extends State<MainScreen> {
       screen: const Register(),
     ),
     NavItemModel(
-      icon: Icons.search,
-      activeIcon: Icons.search,
-      value: 'search',
-      label: 'Search',
-      screen: const Center(child: Text('Search Screen')),
+      icon: Icons.history,
+      activeIcon: Icons.history,
+      value: 'history',
+      label: 'Histórico',
+      screen: const DeliveryIndex(),
     ),
-    NavItemModel(
-      icon: Icons.map_outlined,
-      activeIcon: Icons.map,
-      value: 'map',
-      label: 'Tracking',
-      screen: const Tracking(),
-    ),
+    // NavItemModel(
+    //   icon: Icons.search,
+    //   activeIcon: Icons.search,
+    //   value: 'search',
+    //   label: 'Search',
+    //   screen: const Center(child: Text('Search Screen')),
+    // ),
+    // NavItemModel(
+    //   icon: Icons.map_outlined,
+    //   activeIcon: Icons.map,
+    //   value: 'map',
+    //   label: 'Tracking',
+    //   screen: const Tracking(),
+    // ),
     NavItemModel(
       icon: Icons.receipt_long,
       activeIcon: Icons.receipt_long,
