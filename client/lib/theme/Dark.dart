@@ -7,7 +7,7 @@ final ThemeData dark = ThemeData(
   colorScheme: ColorScheme(
     brightness: Brightness.dark,
     primary: Tokens.primary400,
-    onPrimary: Tokens.neutral900,
+    onPrimary: Tokens.neutral0,
     primaryContainer: Tokens.primary700,
     onPrimaryContainer: Tokens.primary100,
     secondary: Tokens.neutral300,

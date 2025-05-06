@@ -13,7 +13,7 @@ class NavItem extends StatelessWidget {
   const NavItem({
     super.key,
     required this.icon,
-    required this.activeIcon, 
+    required this.activeIcon,
     required this.label,
     required this.isActive,
     required this.onTap,

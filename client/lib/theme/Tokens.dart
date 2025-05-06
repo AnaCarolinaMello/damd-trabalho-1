@@ -37,6 +37,7 @@ class Tokens {
   static const double fontSize24 = 24.0;
   static const double fontSize28 = 28.0;
   static const double fontSize32 = 32.0;
+  static const double fontSize40 = 40.0;
 
   // Spacing
   static const double spacing4 = 4.0;
@@ -47,6 +48,12 @@ class Tokens {
   static const double spacing24 = 24.0;
   static const double spacing28 = 28.0;
   static const double spacing32 = 32.0;
+  static const double spacing36 = 36.0;
+  static const double spacing40 = 40.0;
+  static const double spacing48 = 48.0;
+  static const double spacing56 = 56.0;
+  static const double spacing64 = 64.0;
+  static const double spacing80 = 80.0;
 
   // Border Radius
   static const double radius4 = 4.0;
@@ -58,4 +65,5 @@ class Tokens {
 
   // Border
   static const double borderSize1 = 1.0;
+  static const double borderSize2 = 2.0;
 }

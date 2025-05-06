@@ -35,7 +35,7 @@ class BottomNavBar extends StatelessWidget {
     final theme = Theme.of(context);
 
     // Define colors based on theme
-    final backgroundColor = theme.colorScheme.onPrimary;
+    final backgroundColor = theme.colorScheme.onSecondary;
     final selectedItemColor = theme.colorScheme.primary;
     final unselectedItemColor = theme.colorScheme.onSurfaceVariant;
     
