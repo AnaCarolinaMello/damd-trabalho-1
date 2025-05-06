@@ -34,6 +34,13 @@ class _TrackingState extends State<Tracking> {
     isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Acompanhe seu pedido',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: false,
+      ),
       body: Stack(
         children: [
           // Mapa (simulando com uma cor de fundo)

@@ -13,16 +13,13 @@ import 'package:damd_trabalho_1/views/order/components/Address.dart';
 import 'package:damd_trabalho_1/views/order/components/Status.dart';
 import 'package:damd_trabalho_1/views/order/components/Shop.dart';
 import 'package:damd_trabalho_1/views/order/components/EstimateTime.dart';
+import 'package:damd_trabalho_1/views/order/components/SeeMap.dart';
 
 class OrderDetail extends StatefulWidget {
   final String orderId;
   final bool isActive;
-  
-  const OrderDetail({
-    super.key,
-    required this.orderId,
-    this.isActive = false,
-  });
+
+  const OrderDetail({super.key, required this.orderId, this.isActive = false});
 
   @override
   State<OrderDetail> createState() => _OrderDetailState();
@@ -45,26 +42,20 @@ class _OrderDetailState extends State<OrderDetail> {
       isLoading = false;
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     if (isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Pedido #${widget.orderId}',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
       ),
@@ -76,9 +67,10 @@ class _OrderDetailState extends State<OrderDetail> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(Tokens.spacing16),
-              color: widget.isActive 
-                ? theme.colorScheme.primaryContainer.withOpacity(0.3) 
-                : theme.colorScheme.surfaceVariant.withOpacity(0.3),
+              color:
+                  widget.isActive
+                      ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                      : theme.colorScheme.surfaceVariant.withOpacity(0.3),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -91,7 +83,7 @@ class _OrderDetailState extends State<OrderDetail> {
                       fontSize: Tokens.fontSize14,
                     ),
                   ),
-                  
+
                   if (widget.isActive) ...[
                     const SizedBox(height: Tokens.spacing16),
                     EstimateTime(order: order),
@@ -99,15 +91,18 @@ class _OrderDetailState extends State<OrderDetail> {
                 ],
               ),
             ),
-            
+
             // Detalhes do estabelecimento
             Shop(order: order, isActive: widget.isActive),
 
             const Divider(),
-            
+
             // Itens do pedido
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Tokens.spacing16, vertical: Tokens.spacing8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: Tokens.spacing16,
+                vertical: Tokens.spacing8,
+              ),
               child: Text(
                 'Itens do Pedido',
                 style: TextStyle(
@@ -117,21 +112,21 @@ class _OrderDetailState extends State<OrderDetail> {
                 ),
               ),
             ),
-            
+
             // Lista de itens
             OrderItems(items: order.items),
-            
+
             // Resumo de valores
             Padding(
               padding: const EdgeInsets.all(Tokens.spacing16),
               child: OrderSummary(order: order),
             ),
-            
+
             const Divider(),
-            
+
             // Endereço de entrega
             AddressComponent(order: order),
-            
+
             // Botão de rastreamento para pedidos ativos
             if (widget.isActive)
               Padding(
@@ -145,33 +140,40 @@ class _OrderDetailState extends State<OrderDetail> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => OrderTracking(
-                            order: order,
-                          ),
+                          builder: (context) => OrderTracking(order: order),
                         ),
                       );
                     },
                   ),
                 ),
               ),
-              
+
+            Padding(
+              padding: const EdgeInsets.all(Tokens.spacing16),
+              child: SeeMap(status: order.status, noPadding: true),
+            ),
+
             // Avaliação ou botões para pedidos entregues
             if (!widget.isActive) ...[
               const SizedBox(height: Tokens.spacing16),
-              if (!order.isRated) 
-                Rate(onRatingSubmit: (rating) {
-                  // Implementar ação de avaliação
-                })
-              else 
-                Rating(orderAgain: () {
-                  // Implementar ação de pedir novamente
-                }),
+              if (!order.isRated)
+                Rate(
+                  onRatingSubmit: (rating) {
+                    // Implementar ação de avaliação
+                  },
+                )
+              else
+                Rating(
+                  orderAgain: () {
+                    // Implementar ação de pedir novamente
+                  },
+                ),
             ],
-            
+
             const SizedBox(height: Tokens.spacing24),
           ],
         ),
       ),
     );
   }
-} 
+}

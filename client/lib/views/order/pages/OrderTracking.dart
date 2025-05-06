@@ -5,16 +5,13 @@ import 'package:damd_trabalho_1/views/order/components/Track.dart';
 import 'package:damd_trabalho_1/views/order/components/TrackActions.dart';
 import 'package:damd_trabalho_1/views/order/components/OrderResume.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
+import 'package:damd_trabalho_1/views/order/components/SeeMap.dart';
 
 class OrderTracking extends StatelessWidget {
   final Order order;
   final List<OrderStep>? customSteps;
-  
-  const OrderTracking({
-    super.key,
-    required this.order,
-    this.customSteps,
-  });
+
+  const OrderTracking({super.key, required this.order, this.customSteps});
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +22,7 @@ class OrderTracking extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Rastreamento do Pedido',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
       ),
@@ -41,12 +36,14 @@ class OrderTracking extends StatelessWidget {
               OrderResume(order: order),
 
               const SizedBox(height: Tokens.spacing24),
-              
+
               // Container de rastreamento
               Track(steps: progressSteps),
-              
+
+              SeeMap(status: order.status),
+
               const SizedBox(height: Tokens.spacing24),
-              
+
               // Botão para contatar atendimento
               TrackActions(),
             ],
@@ -55,8 +52,8 @@ class OrderTracking extends StatelessWidget {
       ),
     );
   }
-  
-   List<OrderStep> _getDefaultSteps() {
+
+  List<OrderStep> _getDefaultSteps() {
     return [
       OrderStep(
         title: 'Pedido Recebido',
@@ -83,14 +80,16 @@ class OrderTracking extends StatelessWidget {
         title: 'Pronto para Entrega',
         subtitle: 'Seu pedido está pronto',
         icon: Icons.inventory_2,
-        isCompleted: order.status == 'Saiu para entrega' || order.status == 'Entregue',
+        isCompleted:
+            order.status == 'Saiu para entrega' || order.status == 'Entregue',
         time: '12:50',
       ),
       OrderStep(
         title: 'Saiu para Entrega',
         subtitle: 'Seu pedido está a caminho',
         icon: Icons.delivery_dining,
-        isCompleted: order.status == 'Saiu para entrega' || order.status == 'Entregue',
+        isCompleted:
+            order.status == 'Saiu para entrega' || order.status == 'Entregue',
         time: '13:00',
       ),
       OrderStep(
@@ -102,4 +101,4 @@ class OrderTracking extends StatelessWidget {
       ),
     ];
   }
-} 
+}
