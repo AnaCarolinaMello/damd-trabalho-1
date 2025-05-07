@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:damd_trabalho_1/services/ThemeNotifier.dart';
 import 'package:damd_trabalho_1/theme/Theme.dart';
 import 'package:damd_trabalho_1/views/main/MainScreen.dart';
+import 'package:damd_trabalho_1/views/setup/pages/Welcome.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -44,7 +45,7 @@ class _MyApp extends State<MyApp> {
         darkTheme: darkTheme,
         themeMode: themeNotifier.themeMode,
         debugShowCheckedModeBanner: false,
-        home: const MainScreen(),
+        home: const WelcomePage(),
       ),
     );
   }

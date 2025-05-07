@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/components/BottomNavBar.dart';
-import 'package:damd_trabalho_1/views/register/pages/Index.dart';
-import 'package:damd_trabalho_1/views/map/pages/Tracking.dart';
 import 'package:damd_trabalho_1/views/profile/pages/Profile.dart';
 import 'package:damd_trabalho_1/views/order/pages/Orders.dart';
 import 'package:damd_trabalho_1/views/delivery/pages/Index.dart';
@@ -22,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
       activeIcon: Icons.home,
       value: 'home',
       label: 'Home',
-      screen: const Register(),
+      screen: const Text('Home'),
     ),
     NavItemModel(
       icon: Icons.history,

@@ -38,14 +38,41 @@ final ThemeData dark = ThemeData(
     surfaceTint: Tokens.primary400.withOpacity(0.1),
   ),
   textTheme: TextTheme(
-    displayLarge: TextStyle(fontSize: Tokens.fontSize32, fontWeight: FontWeight.bold, color: Tokens.neutral50),
-    displayMedium: TextStyle(fontSize: Tokens.fontSize28, fontWeight: FontWeight.bold, color: Tokens.neutral50),
-    displaySmall: TextStyle(fontSize: Tokens.fontSize24, fontWeight: FontWeight.bold, color: Tokens.neutral50),
-    headlineLarge: TextStyle(fontSize: Tokens.fontSize24, fontWeight: FontWeight.bold, color: Tokens.neutral50),
-    headlineMedium: TextStyle(fontSize: Tokens.fontSize20, fontWeight: FontWeight.bold, color: Tokens.neutral50),
-    headlineSmall: TextStyle(fontSize: Tokens.fontSize16, fontWeight: FontWeight.bold, color: Tokens.neutral50),
+    displayLarge: TextStyle(
+      fontSize: Tokens.fontSize32,
+      fontWeight: FontWeight.bold,
+      color: Tokens.neutral50,
+    ),
+    displayMedium: TextStyle(
+      fontSize: Tokens.fontSize28,
+      fontWeight: FontWeight.bold,
+      color: Tokens.neutral50,
+    ),
+    displaySmall: TextStyle(
+      fontSize: Tokens.fontSize24,
+      fontWeight: FontWeight.bold,
+      color: Tokens.neutral50,
+    ),
+    headlineLarge: TextStyle(
+      fontSize: Tokens.fontSize24,
+      fontWeight: FontWeight.bold,
+      color: Tokens.neutral50,
+    ),
+    headlineMedium: TextStyle(
+      fontSize: Tokens.fontSize20,
+      fontWeight: FontWeight.bold,
+      color: Tokens.neutral50,
+    ),
+    headlineSmall: TextStyle(
+      fontSize: Tokens.fontSize16,
+      fontWeight: FontWeight.bold,
+      color: Tokens.neutral50,
+    ),
     bodyLarge: TextStyle(fontSize: Tokens.fontSize16, color: Tokens.neutral200),
-    bodyMedium: TextStyle(fontSize: Tokens.fontSize14, color: Tokens.neutral200),
+    bodyMedium: TextStyle(
+      fontSize: Tokens.fontSize14,
+      color: Tokens.neutral200,
+    ),
     bodySmall: TextStyle(fontSize: Tokens.fontSize12, color: Tokens.neutral300),
   ),
   scaffoldBackgroundColor: Tokens.neutral900,
@@ -54,19 +81,32 @@ final ThemeData dark = ThemeData(
     foregroundColor: Tokens.neutral100,
     elevation: 0,
   ),
+  snackBarTheme: const SnackBarThemeData(
+    actionTextColor: Tokens.primary500,
+    backgroundColor: Tokens.neutral950,
+    contentTextStyle: TextStyle(color: Tokens.neutral0),
+    elevation: 20,
+  ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: Tokens.primary500,
       foregroundColor: Tokens.neutral0,
-      padding: const EdgeInsets.symmetric(horizontal: Tokens.spacing16, vertical: Tokens.spacing12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Tokens.spacing16,
+        vertical: Tokens.spacing12,
+      ),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radius8)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Tokens.radius8),
+      ),
     ),
   ),
   cardTheme: CardTheme(
     color: Tokens.neutral800,
     elevation: 2,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radius12)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(Tokens.radius12),
+    ),
     margin: const EdgeInsets.all(Tokens.spacing8),
   ),
 );

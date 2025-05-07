@@ -54,6 +54,12 @@ final ThemeData light = ThemeData(
     foregroundColor: Tokens.neutral900,
     elevation: 0,
   ),
+  snackBarTheme: const SnackBarThemeData(
+    actionTextColor: Tokens.primary500,
+    backgroundColor: Tokens.neutral0,
+    contentTextStyle: TextStyle(color: Tokens.neutral950),
+    elevation: 20,
+  ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: Tokens.primary500,

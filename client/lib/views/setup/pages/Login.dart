@@ -3,18 +3,15 @@ import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/components/Button.dart';
 import 'package:damd_trabalho_1/components/Input.dart';
 import 'package:damd_trabalho_1/components/AppBar.dart';
-import 'package:damd_trabalho_1/views/register/components/Header.dart';
-import 'package:damd_trabalho_1/views/register/components/HasLogin.dart';
-import 'package:damd_trabalho_1/views/register/components/RegisterAction.dart';
 
-class ClientPage extends StatefulWidget {
-  const ClientPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<ClientPage> createState() => _ClientPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _ClientPageState extends State<ClientPage> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -28,8 +25,10 @@ class _ClientPageState extends State<ClientPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: const CustomAppBar(title: "Cadastro de cliente"),
+      appBar: const CustomAppBar(title: "Login"),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -40,7 +39,22 @@ class _ClientPageState extends State<ClientPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  const RegisterHeader(),
+                  Text(
+                    "Faça login para continuar.",
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+
+                  const SizedBox(height: Tokens.spacing8),
+
+                  Text(
+                    "Bem-vindo de volta!",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
 
                   const SizedBox(height: Tokens.spacing40),
 
@@ -74,12 +88,48 @@ class _ClientPageState extends State<ClientPage> {
                   const SizedBox(height: Tokens.spacing40),
 
                   // Don't have an account text and register link
-                  const HasLogin(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Não tem uma conta? ",
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterPage(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Cadastre-se",
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
 
                   const SizedBox(height: Tokens.spacing24),
 
                   // Login Button
-                  RegisterAction(formKey: _formKey),
+                  Container(
+                    width: double.infinity,
+                    child: Button(
+                      text: "Login",
+                      variant: ButtonVariant.primary,
+                      onPressed: () {
+                        // TODO: Implement login functionality
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
