@@ -17,9 +17,10 @@ class Order {
   final double deliveryFee;
   final double discount;
   final Address address;
+  final String? driverId;
 
   Order({
-    required this.id,
+    this.id,
     required this.name,
     required this.description,
     required this.date,
@@ -31,6 +32,7 @@ class Order {
     this.items = const [],
     this.deliveryFee = 0.0,
     this.discount = 0.0,
+    this.driverId,
   });
 
   double get price => items.fold(0.0, (sum, item) => sum + item.price * item.quantity);
@@ -64,6 +66,7 @@ class Order {
       items: orderItems,
       deliveryFee: json['delivery_fee'],
       discount: json['discount'],
+      driverId: json['driver_id'],
     );
   }
 }

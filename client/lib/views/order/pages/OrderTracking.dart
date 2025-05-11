@@ -40,7 +40,7 @@ class OrderTracking extends StatelessWidget {
               // Container de rastreamento
               Track(steps: progressSteps),
 
-              SeeMap(status: order.status),
+              SeeMap(status: order.status, order: order),
 
               const SizedBox(height: Tokens.spacing24),
 

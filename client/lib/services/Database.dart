@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
+import 'package:damd_trabalho_1/models/Driver.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:damd_trabalho_1/models/User.dart';
@@ -181,6 +182,25 @@ class DatabaseService {
     return await db.delete('users', where: 'id = ?', whereArgs: [id]);
   }
 
+  // Driver operations
+  Future<Driver?> getDriver(String id) async {
+    final db = await instance.database;
+    final maps = await db.rawQuery('''
+      SELECT u.*, 
+        COALESCE(AVG(o.rating), 0) as rating,
+        COUNT(o.id) as trips
+      FROM users u
+      LEFT JOIN orders o ON o.driver_id = u.id AND o.status = 'delivered'
+      WHERE u.id = ?
+      GROUP BY u.id
+    ''', [id]);
+
+    if (maps.isNotEmpty) {
+      return Driver.fromJson(maps.first);
+    }
+    return null;
+  }
+
   // Address operations
   Future<String> createAddress(Address address) async {
     final db = await instance.database;
@@ -347,6 +367,7 @@ class DatabaseService {
           discount: orderMap['discount'] as double? ?? 0.0,
           address: address,
           items: items,
+          driverId: orderMap['driver_id'] as String?,
         ),
       );
     }

@@ -155,7 +155,7 @@ class _OrderDetailState extends State<OrderDetail> {
 
             Padding(
               padding: const EdgeInsets.all(Tokens.spacing16),
-              child: SeeMap(status: order!.status, noPadding: true),
+              child: SeeMap(status: order!.status, order: order!, noPadding: true),
             ),
 
             // Avaliação ou botões para pedidos entregues

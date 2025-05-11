@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
+import 'package:damd_trabalho_1/models/Driver.dart' as DriverModel;
 
 class Driver extends StatelessWidget {
-  final Map<String, dynamic> driver;
+  final DriverModel.Driver driver;
 
   const Driver({super.key, required this.driver});
 
@@ -27,7 +28,7 @@ class Driver extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${driver["name"]} está a caminho',
+                      '${driver.name} está a caminho',
                       style: TextStyle(
                         fontSize: Tokens.fontSize20,
                         fontWeight: FontWeight.bold,
@@ -43,24 +44,13 @@ class Driver extends StatelessWidget {
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(Tokens.radius4),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      driver['arrivalTime'].toString(),
-                      style: const TextStyle(
-                        fontSize: Tokens.fontSize20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const Text(
-                      'min',
-                      style: TextStyle(
-                        fontSize: Tokens.fontSize12,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '${driver.arrivalTime}',
+                  style: const TextStyle(
+                    fontSize: Tokens.fontSize20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -95,7 +85,7 @@ class Driver extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              driver['rating'].toString(),
+                              driver.rating.toString(),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: Tokens.fontSize16,
@@ -112,7 +102,7 @@ class Driver extends StatelessWidget {
                         ),
                         const SizedBox(height: Tokens.spacing4),
                         Text(
-                          '${driver["vehicleColor"]} ${driver["vehicle"]}',
+                          '${driver.vehicleColor} ${driver.vehicle}',
                           style: TextStyle(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: Tokens.fontSize14,
@@ -131,7 +121,7 @@ class Driver extends StatelessWidget {
                       borderRadius: BorderRadius.circular(Tokens.radius4),
                     ),
                     child: Text(
-                      driver['licensePlate'],
+                      driver.licensePlate,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: Tokens.fontSize16,
@@ -151,7 +141,7 @@ class Driver extends StatelessWidget {
                   ),
                   const SizedBox(width: Tokens.spacing8),
                   Text(
-                    driver['name'],
+                    driver.name,
                     style: TextStyle(
                       color: Colors.blue,
                       fontWeight: FontWeight.bold,
@@ -160,7 +150,7 @@ class Driver extends StatelessWidget {
                   ),
                   const SizedBox(width: Tokens.spacing8),
                   Text(
-                    '• ${driver["trips"]} entregas',
+                    '• ${driver.trips} entregas',
                     style: TextStyle(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: Tokens.fontSize14,

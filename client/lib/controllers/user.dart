@@ -21,6 +21,10 @@ class UserController {
     // }
   }
 
+  static Future<User?> getUserById(String id) async {
+    return await databaseService.getUser(id);
+  }
+
   static Future createUser(User user) async {
     // try {
     //   await ApiService.post(path, user);

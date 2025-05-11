@@ -8,6 +8,7 @@ import 'package:damd_trabalho_1/views/order/components/Address.dart';
 import 'package:damd_trabalho_1/views/order/components/SummaryItem.dart';
 import 'package:damd_trabalho_1/components/IconButton.dart';
 import 'package:damd_trabalho_1/views/delivery/pages/Finish.dart';
+import 'package:damd_trabalho_1/views/map/pages/Route.dart';
 
 class Delivery extends StatefulWidget {
   const Delivery({super.key, required this.order});
@@ -84,6 +85,30 @@ class _DeliveryState extends State<Delivery> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => FinishDelivery(order: widget.order),
+                    ),
+                  );
+                  
+                  if (result == true && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Entrega finalizada com sucesso!')),
+                    );
+                    Navigator.pop(context, true);
+                  }
+                },
+              ),
+            ),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(Tokens.spacing16),
+              child: CustomIconButton(
+                icon: Icons.check_circle_outline,
+                label: 'Ver rota',
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RoutePage(order: widget.order),
                     ),
                   );
                   

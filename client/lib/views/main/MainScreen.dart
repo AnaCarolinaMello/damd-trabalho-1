@@ -9,7 +9,8 @@ import 'package:damd_trabalho_1/models/enum/UserType.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final String? item;
+  const MainScreen({super.key, this.item});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -23,6 +24,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void initState() {
+    if (widget.item != null) {
+      _currentNavItem = widget.item!;
+    }
     super.initState();
     getUser();
   }

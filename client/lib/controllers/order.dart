@@ -193,10 +193,16 @@ class OrderController {
   }
 
   static Future<Order> createOrder(Order order, String userId) async {
-    order.status = Status.pending;
-    order.date = DateTime.now().toIso8601String();
-    order.time = DateTime.now().toIso8601String();
-    return await databaseService.createOrder(order, userId);
+    final newOrder = Order(
+      name: order.name,
+      description: order.description,
+      date: DateTime.now().toIso8601String(),
+      time: DateTime.now().toIso8601String(),
+      status: Status.pending,
+      items: order.items,
+      address: order.address,
+    );
+    return await databaseService.createOrder(newOrder, userId);
   }
 
   static Future<void> rateOrder(String orderId, double rating) async {
