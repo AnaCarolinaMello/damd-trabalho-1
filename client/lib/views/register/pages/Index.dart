@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
-import 'package:damd_trabalho_1/models/UserType.dart';
+import 'package:damd_trabalho_1/models/enum/UserType.dart';
 import 'package:damd_trabalho_1/components/AppBar.dart';
 import 'package:damd_trabalho_1/components/Button.dart';
 import 'package:damd_trabalho_1/views/register/components/UserType.dart';

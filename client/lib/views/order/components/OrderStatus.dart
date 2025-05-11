@@ -32,13 +32,8 @@ class OrderStatus extends StatelessWidget {
           Status(order: order, isActive: isActive),
           const Spacer(),
           if (isActive)
-            Text(
-              'Pedido #${order.id}',
-              style: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            )
-          else if (order.isRated)
+            SizedBox()
+          else if (order.rating != 0)
             Row(
               children: [
                 Text(
@@ -64,13 +59,7 @@ class OrderStatus extends StatelessWidget {
               ],
             )
           else
-            Text(
-              'Avaliar pedido',
-              style: TextStyle(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            SizedBox()
         ],
       ),
     );

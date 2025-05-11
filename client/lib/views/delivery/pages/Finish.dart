@@ -1,12 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/components/IconButton.dart';
 import 'package:damd_trabalho_1/views/order/components/Shop.dart';
-import 'package:damd_trabalho_1/views/delivery/components/CamarePreview.dart';
 import 'package:damd_trabalho_1/views/delivery/components/PhotoPreview.dart';
+import 'package:damd_trabalho_1/views/main/MainScreen.dart';
+import 'package:damd_trabalho_1/controllers/order.dart';
 
 class FinishDelivery extends StatefulWidget {
   final Order order;
@@ -35,7 +35,7 @@ class _FinishDeliveryState extends State<FinishDelivery> {
     try {
       _camerasFuture = availableCameras();
       final cameras = await _camerasFuture;
-      
+
       if (cameras.isEmpty) {
         debugPrint('No cameras available');
         return;
@@ -91,26 +91,22 @@ class _FinishDeliveryState extends State<FinishDelivery> {
     });
 
     // Simulating API call
-    await Future.delayed(const Duration(seconds: 2));
+    await OrderController.deliverOrder(widget.order.id!, _photoFile!);
 
-    if (!mounted) return;
-
-    // Return to the previous screen with success message
-    Navigator.pop(context, true);
-  }
-
-  Widget _buildCameraPreview() {
-    if (_cameraController == null || !_isCameraInitialized) {
-      return Container(
-        height: 300,
-        color: Colors.black,
-        child: const Center(child: CircularProgressIndicator()),
+    if (!mounted) {
+      setState(() {
+        _isSubmitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao entregar o pedido')),
       );
+      return;
     }
 
-    return AspectRatio(
-      aspectRatio: _cameraController!.value.aspectRatio,
-      child: CameraPreview(_cameraController!),
+    // Return to the previous screen with success message
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MainScreen()),
     );
   }
 
@@ -134,7 +130,11 @@ class _FinishDeliveryState extends State<FinishDelivery> {
             children: [
               Text('Entrega de pedido', style: theme.textTheme.titleLarge),
               const SizedBox(height: Tokens.spacing8),
-              Shop(order: widget.order, isActive: true, padding: const EdgeInsets.symmetric(vertical: Tokens.spacing16)),
+              Shop(
+                order: widget.order,
+                isActive: true,
+                padding: const EdgeInsets.symmetric(vertical: Tokens.spacing16),
+              ),
               const SizedBox(height: Tokens.spacing16),
 
               Text(
@@ -181,7 +181,7 @@ class _FinishDeliveryState extends State<FinishDelivery> {
                     onPressed: _isSubmitting ? () {} : () => _submitDelivery(),
                   ),
                 ),
-              ]
+              ],
             ],
           ),
         ),

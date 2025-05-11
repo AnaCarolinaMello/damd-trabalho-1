@@ -1,6 +1,4 @@
-import 'package:damd_trabalho_1/utils/index.dart';
 import 'package:flutter/material.dart';
-import 'package:damd_trabalho_1/controllers/order.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/views/order/pages/OrderTracking.dart';
@@ -15,18 +13,21 @@ import 'package:damd_trabalho_1/views/order/components/Shop.dart';
 import 'package:damd_trabalho_1/views/order/components/EstimateTime.dart';
 import 'package:damd_trabalho_1/views/order/components/SeeMap.dart';
 
-class OrderDetail extends StatefulWidget {
-  final String orderId;
-  final bool isActive;
 
-  const OrderDetail({super.key, required this.orderId, this.isActive = false});
+class OrderDetail extends StatefulWidget {
+  final Order order;
+  final bool isActive;
+  final Function() orderAgain;
+  final Function(Order, double) rateOrder;
+
+  const OrderDetail({super.key, required this.order, this.isActive = false, required this.orderAgain, required this.rateOrder});
 
   @override
   State<OrderDetail> createState() => _OrderDetailState();
 }
 
 class _OrderDetailState extends State<OrderDetail> {
-  late Order order;
+  Order? order;
   bool isLoading = true;
 
   @override
@@ -36,9 +37,8 @@ class _OrderDetailState extends State<OrderDetail> {
   }
 
   Future<void> _loadOrder() async {
-    final loadedOrder = await OrderController.getOrder(widget.orderId);
     setState(() {
-      order = loadedOrder;
+      order = widget.order;
       isLoading = false;
     });
   }
@@ -54,7 +54,7 @@ class _OrderDetailState extends State<OrderDetail> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Pedido #${widget.orderId}',
+          'Pedido #${order!.id}',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
@@ -74,10 +74,10 @@ class _OrderDetailState extends State<OrderDetail> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Status(order: order, isActive: widget.isActive),
+                  Status(order: order!, isActive: widget.isActive),
                   const SizedBox(height: Tokens.spacing4),
                   Text(
-                    '${order.date} ${order.time}',
+                    '${order!.date} ${order!.time}',
                     style: TextStyle(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: Tokens.fontSize14,
@@ -86,16 +86,21 @@ class _OrderDetailState extends State<OrderDetail> {
 
                   if (widget.isActive) ...[
                     const SizedBox(height: Tokens.spacing16),
-                    EstimateTime(order: order),
+                    EstimateTime(order: order!),
                   ],
                 ],
               ),
             ),
 
             // Detalhes do estabelecimento
-            Shop(order: order, isActive: widget.isActive),
+            Shop(order: order!, isActive: widget.isActive),
 
             const Divider(),
+            
+            if (widget.order.image != null && widget.order.image!.isNotEmpty) ...[
+              Image.memory(widget.order.image!),
+              const Divider(),
+            ],
 
             // Itens do pedido
             Padding(
@@ -114,18 +119,18 @@ class _OrderDetailState extends State<OrderDetail> {
             ),
 
             // Lista de itens
-            OrderItems(items: order.items),
+            OrderItems(items: order!.items),
 
             // Resumo de valores
             Padding(
               padding: const EdgeInsets.all(Tokens.spacing16),
-              child: OrderSummary(order: order),
+              child: OrderSummary(order: order!),
             ),
 
             const Divider(),
 
             // Endereço de entrega
-            AddressComponent(address: order.address),
+            AddressComponent(address: order!.address),
 
             // Botão de rastreamento para pedidos ativos
             if (widget.isActive)
@@ -140,7 +145,7 @@ class _OrderDetailState extends State<OrderDetail> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => OrderTracking(order: order),
+                          builder: (context) => OrderTracking(order: order!),
                         ),
                       );
                     },
@@ -150,23 +155,24 @@ class _OrderDetailState extends State<OrderDetail> {
 
             Padding(
               padding: const EdgeInsets.all(Tokens.spacing16),
-              child: SeeMap(status: order.status, noPadding: true),
+              child: SeeMap(status: order!.status, noPadding: true),
             ),
 
             // Avaliação ou botões para pedidos entregues
             if (!widget.isActive) ...[
               const SizedBox(height: Tokens.spacing16),
-              if (!order.isRated)
+              if (order!.rating == 0)
                 Rate(
-                  onRatingSubmit: (rating) {
-                    // Implementar ação de avaliação
+                  rateOrder: (rating) => {
+                    widget.rateOrder(order!, rating),
+                    setState(() {
+                      order!.rating = rating;
+                    }),
                   },
                 )
               else
                 Rating(
-                  orderAgain: () {
-                    // Implementar ação de pedir novamente
-                  },
+                  orderAgain: widget.orderAgain,
                 ),
             ],
 

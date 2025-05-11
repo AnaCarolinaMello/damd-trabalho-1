@@ -1,14 +1,45 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/components/Card.dart';
 import 'package:damd_trabalho_1/components/ActionButton.dart';
 import 'package:damd_trabalho_1/utils/index.dart';
+import 'package:damd_trabalho_1/controllers/order.dart';
+import 'package:damd_trabalho_1/models/User.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:damd_trabalho_1/views/delivery/pages/Delivery.dart';
 
-class DeliveryCard extends StatelessWidget {
-  final Order order;
+class DeliveryCard extends StatefulWidget {
+  final Order? order;
 
   const DeliveryCard({super.key, required this.order});
+
+  @override
+  State<DeliveryCard> createState() => _DeliveryCardState();
+}
+
+class _DeliveryCardState extends State<DeliveryCard> {
+  bool loading = false;
+
+  void acceptOrder() async {
+    setState(() {
+      loading = true;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final user = User.fromJson(jsonDecode(prefs.getString('user') ?? '{}'));
+
+    await OrderController.acceptOrder(widget.order!.id!, user.id!);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Delivery(order: widget.order!),
+      ),
+    );
+    setState(() {
+      loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +64,7 @@ class DeliveryCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(Tokens.radius8),
                   ),
                   child: Icon(
-                    Utils.getIconForOrderType(order.name),
+                    Utils.getIconForOrderType(widget.order!.name),
                     color: theme.colorScheme.primary,
                   ),
                 ),
@@ -47,7 +78,7 @@ class DeliveryCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            order.name,
+                            widget.order!.name,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: Tokens.fontSize16,
@@ -56,7 +87,7 @@ class DeliveryCard extends StatelessWidget {
                           ),
                           const Spacer(),
                           Text(
-                            'R\$ ${order.deliveryFee.toStringAsFixed(2)}',
+                            'R\$ ${widget.order!.deliveryFee.toStringAsFixed(2)}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: Tokens.fontSize16,
@@ -67,7 +98,7 @@ class DeliveryCard extends StatelessWidget {
                       ),
                       const SizedBox(height: Tokens.spacing4),
                       Text(
-                        '${order.date} ${order.time}',
+                        '${widget.order!.date} ${widget.order!.time}',
                         style: TextStyle(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontSize: Tokens.fontSize14,
@@ -81,17 +112,21 @@ class DeliveryCard extends StatelessWidget {
           ),
 
           Padding(
-            padding: const EdgeInsets.only(left: Tokens.spacing16, right: Tokens.spacing16, bottom: Tokens.spacing16),
+            padding: const EdgeInsets.only(
+              left: Tokens.spacing16,
+              right: Tokens.spacing16,
+              bottom: Tokens.spacing16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text(
-                  order.address.shortAddress,
+                  widget.order!.address.shortAddress,
                   style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
                 Text(
-                  order.address.cityState,
+                  widget.order!.address.cityState,
                   style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
@@ -129,17 +164,8 @@ class DeliveryCard extends StatelessWidget {
                   label: 'Aceitar',
                   isPrimary: true,
                   icon: Icons.check_circle_outline,
-                  onTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => OrderDetail(
-                    //       orderId: order.id,
-                    //       isActive: isActive,
-                    //     ),
-                    //   ),
-                    // );
-                  },
+                  onTap: acceptOrder,
+                  loading: loading,
                 ),
               ],
             ),

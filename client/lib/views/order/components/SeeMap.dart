@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/components/IconButton.dart';
 import 'package:damd_trabalho_1/views/map/pages/Tracking.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart';
 
 class SeeMap extends StatelessWidget {
-  final String status;
+  final Status status;
   final bool noPadding;
 
   const SeeMap({
@@ -15,7 +16,7 @@ class SeeMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (status == 'Saiu para entrega') {
+    if (status == Status.accepted) {
       return Column(
         children: [
           if (!noPadding) const SizedBox(height: Tokens.spacing24),

@@ -8,11 +8,16 @@ import 'package:damd_trabalho_1/models/Order.dart';
 class OrderActions extends StatelessWidget {
   final Order order;
   final bool isActive;
+  final Function() orderAgain;
+  final Function(Order, double) rateOrder;
+
 
   const OrderActions({
     super.key,
     required this.order,
     required this.isActive,
+    required this.orderAgain,
+    required this.rateOrder,
   });
 
   @override
@@ -30,8 +35,10 @@ class OrderActions extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => OrderDetail(
-                    orderId: order.id,
+                    order: order,
                     isActive: isActive,
+                    orderAgain: orderAgain,
+                    rateOrder: rateOrder,
                   ),
                 ),
               );
@@ -58,15 +65,8 @@ class OrderActions extends StatelessWidget {
             ActionButton(
               label: 'Pedir novamente',
               icon: Icons.replay_outlined,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Pedindo novamente: ${order.name}'),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              },
-              isPrimary: !order.isRated,
+              onTap: orderAgain,
+              isPrimary: order.rating == 0,
             ),
         ],
       ),

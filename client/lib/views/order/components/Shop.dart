@@ -80,7 +80,7 @@ class Shop extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: Tokens.spacing4),
-                if (!isActive && order.isRated) ...[
+                if (!isActive && order.rating != 0) ...[
                   const SizedBox(height: Tokens.spacing8),
                   Row(
                     children: [

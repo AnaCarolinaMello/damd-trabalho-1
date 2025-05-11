@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/components/Button.dart';
 import 'package:damd_trabalho_1/components/Input.dart';
 import 'package:damd_trabalho_1/components/AppBar.dart';
+import 'package:damd_trabalho_1/views/main/MainScreen.dart';
+import 'package:damd_trabalho_1/controllers/user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,6 +19,38 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool loading = false;
+
+  void login() async {
+    setState(() {
+      loading = true;
+    });
+
+    final user = await UserController.getUser(
+      _emailController.text,
+      _passwordController.text,
+    );
+
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('user', jsonEncode(user?.toJson()));
+      print(prefs.getString('user'));
+    });
+
+    if (user != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MainScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuário não encontrado!')),
+      );
+    }
+
+    setState(() {
+      loading = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -124,10 +160,9 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     child: Button(
                       text: "Login",
+                      loading: loading,
                       variant: ButtonVariant.primary,
-                      onPressed: () {
-                        // TODO: Implement login functionality
-                      },
+                      onPressed: login,
                     ),
                   ),
                 ],

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
-import 'package:damd_trabalho_1/components/Button.dart';
 import 'package:damd_trabalho_1/components/Input.dart';
 import 'package:damd_trabalho_1/components/AppBar.dart';
 import 'package:damd_trabalho_1/views/register/components/Header.dart';
 import 'package:damd_trabalho_1/views/register/components/HasLogin.dart';
 import 'package:damd_trabalho_1/views/register/components/RegisterAction.dart';
+import 'package:damd_trabalho_1/views/main/MainScreen.dart';
+import 'package:damd_trabalho_1/models/User.dart';
+import 'package:damd_trabalho_1/models/enum/UserType.dart';
+import 'package:damd_trabalho_1/controllers/user.dart';
 
 class ClientPage extends StatefulWidget {
   const ClientPage({super.key});
@@ -18,9 +21,11 @@ class _ClientPageState extends State<ClientPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -43,6 +48,20 @@ class _ClientPageState extends State<ClientPage> {
                   const RegisterHeader(),
 
                   const SizedBox(height: Tokens.spacing40),
+
+                  CustomInput(
+                    controller: _nameController,
+                    labelText: "Nome",
+                    hintText: "Digite seu nome",
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Digite seu nome';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: Tokens.spacing24),
 
                   CustomInput(
                     controller: _emailController,
@@ -79,7 +98,13 @@ class _ClientPageState extends State<ClientPage> {
                   const SizedBox(height: Tokens.spacing24),
 
                   // Login Button
-                  RegisterAction(formKey: _formKey),
+                  RegisterAction(
+                    formKey: _formKey,
+                    name: _nameController,
+                    email: _emailController,
+                    password: _passwordController,
+                    type: UserType.customer,
+                  ),
                 ],
               ),
             ),

@@ -9,8 +9,10 @@ import 'package:damd_trabalho_1/utils/index.dart';
 class OrderCard extends StatelessWidget {
   final Order order;
   final bool isActive;
+  final Function(Order) orderAgain;
+  final Function(Order, double) rateOrder;
 
-  const OrderCard({super.key, required this.order, required this.isActive});
+  const OrderCard({super.key, required this.order, required this.isActive, required this.orderAgain, required this.rateOrder});
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +105,7 @@ class OrderCard extends StatelessWidget {
           ),
 
           // Botões de ação
-          OrderActions(order: order, isActive: isActive),
+          OrderActions(order: order, isActive: isActive, orderAgain: () => orderAgain(order), rateOrder: rateOrder),
         ],
       ),
     );

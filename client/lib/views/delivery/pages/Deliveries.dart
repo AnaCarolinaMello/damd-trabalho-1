@@ -4,6 +4,7 @@ import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
 import 'package:damd_trabalho_1/views/delivery/components/DeliveryCard.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart';
 
 class Deliveries extends StatefulWidget {
   const Deliveries({super.key});
@@ -17,8 +18,7 @@ class _DeliveriesState extends State<Deliveries> {
   late List<Order> _availableDeliveries;
 
   getDeliveries() async {
-    _availableDeliveries = await OrderController.getOrders();
-    _availableDeliveries = _availableDeliveries.where((order) => order.status == 'Em preparação').toList();
+    _availableDeliveries = await OrderController.getAvailableOrders();
 
     setState(() {
       isLoading = false;
@@ -46,6 +46,7 @@ class _DeliveriesState extends State<Deliveries> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
+        automaticallyImplyLeading: false,
       ),
       body: _availableDeliveries.isEmpty
         ? Center(

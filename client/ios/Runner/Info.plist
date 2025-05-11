@@ -51,5 +51,7 @@
 	<string>Esta aplicação precisa acessar a galeria para salvar fotos de confirmação de entrega.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Esta aplicação precisa acessar o microfone para gravar vídeos de confirmação de entrega.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Precisamos da sua localização para mostrar a posição atual.</string>
 </dict>
 </plist>

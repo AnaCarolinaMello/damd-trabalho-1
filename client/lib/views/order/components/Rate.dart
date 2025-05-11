@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/components/Button.dart';
-
+import 'package:damd_trabalho_1/models/Order.dart';
+import 'package:damd_trabalho_1/controllers/order.dart';
 class Rate extends StatefulWidget {
-  final Function(double) onRatingSubmit;
+  final Function(double) rateOrder;
 
   const Rate({
     super.key,
-    required this.onRatingSubmit,
+    required this.rateOrder,
   });
 
   @override
@@ -57,11 +58,7 @@ class _RateState extends State<Rate> {
           const SizedBox(height: Tokens.spacing16),
           Button(
             text: 'Enviar Avaliação',
-            onPressed: () {
-              if (_rating > 0) {
-                widget.onRatingSubmit(_rating);
-              }
-            },
+            onPressed: () => widget.rateOrder(_rating),
           ),
         ],
       ),

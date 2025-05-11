@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
-import 'package:damd_trabalho_1/models/UserType.dart';
+import 'package:damd_trabalho_1/models/enum/UserType.dart';
 
 class UserTypeCard extends StatelessWidget {
   final UserType type;

@@ -1,8 +1,14 @@
+import 'package:camera/camera.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/models/OrderItem.dart';
 import 'package:damd_trabalho_1/models/Address.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart';
+import 'package:damd_trabalho_1/services/Database.dart';
+import 'package:damd_trabalho_1/services/Api.dart';
 
 class OrderController {
+  static final path = 'orders';
+  static final databaseService = DatabaseService.instance;
   static List<Order> orders = [
     Order(
       id: '4752348',
@@ -10,8 +16,7 @@ class OrderController {
       description: 'Prato do dia + sobremesa',
       date: 'Hoje',
       time: '12:30',
-      status: 'Em preparação',
-      imageUrl: 'assets/images/restaurant1.png',
+      status: Status.pending,
       address: Address(
         street: 'Rua das Flores',
         number: '123',
@@ -34,8 +39,7 @@ class OrderController {
       description: '8 itens',
       date: 'Hoje',
       time: '10:45',
-      status: 'Saiu para entrega',
-      imageUrl: 'assets/images/market.png',
+      status: Status.accepted,
       deliveryFee: 5.0,
       discount: 2.0,
       address: Address(
@@ -58,9 +62,7 @@ class OrderController {
       description: '3 itens',
       date: '12 Set',
       time: '16:20',
-      status: 'Entregue',
-      imageUrl: 'assets/images/pharmacy.png',
-      isRated: true,
+      status: Status.delivered,
       rating: 4.0,
       deliveryFee: 5.0,
       discount: 2.0,
@@ -84,9 +86,7 @@ class OrderController {
       description: 'Açaí 500ml + Complementos',
       date: '10 Set',
       time: '19:15',
-      status: 'Entregue',
-      imageUrl: 'assets/images/acai.png',
-      isRated: true,
+      status: Status.delivered,
       rating: 5.0,
       deliveryFee: 5.0,
       discount: 2.0,
@@ -107,9 +107,7 @@ class OrderController {
       description: 'Combo X-Tudo',
       date: '05 Set',
       time: '20:45',
-      status: 'Entregue',
-      imageUrl: 'assets/images/burger.png',
-      isRated: true,
+      status: Status.delivered,
       rating: 3.5,
       deliveryFee: 5.0,
       discount: 2.0,
@@ -130,9 +128,7 @@ class OrderController {
       description: 'Pizza Grande Marguerita',
       date: '02 Set',
       time: '21:10',
-      status: 'Entregue',
-      imageUrl: 'assets/images/pizza.png',
-      isRated: true,
+      status: Status.delivered,
       rating: 4.5,
       deliveryFee: 5.0,
       discount: 2.0,
@@ -151,16 +147,69 @@ class OrderController {
     ),
   ];
 
-  static Future<List<Order>> getOrders() async {
-    return orders;
+  static Future<List<Order>> getOrders(String userId) async {
+    return await databaseService.getOrdersByUserId(userId);
   }
 
-  static Future<Order> getOrder(String id) async {
-    return orders.firstWhere((order) => order.id == id);
+  static Future<Order?> getOrder(String id) async {
+    // try {
+    //   final response = await ApiService.get('$path/$id');
+    //   return Order.fromJson(response);
+    // } catch (e) {
+      return databaseService.getOrderById(id);
+    // }
   }
 
-  static Future<Order> getAcceptOrder(String driverId) async {
-    final order = orders[0];
-    return order;
+  static Future<void> acceptOrder(String orderId, String driverId) async {
+    // try {
+    //   final response = await ApiService.post('$path/accept/$orderId', {
+    //     'driver_id': driverId,
+    //   });
+    // } catch (e) {
+      await databaseService.assignDriverToOrder(orderId, driverId);
+    // }
+  }
+
+  static Future<Order?> getAcceptOrder(String driverId) async {
+    // try {
+    //   final response = await ApiService.get('$path/accept/$driverId');
+    //   return Order.fromJson(response);
+    // } catch (e) {
+      return await databaseService.getOrderByDriverId(driverId);
+    // }
+  }
+
+  static Future<void> deliverOrder(String orderId, XFile photo) async {
+    await databaseService.finishOrder(orderId, photo);
+  }
+
+  static Future<List<Order>> getAvailableOrders() async {
+    // try {
+    //   final response = await ApiService.get('$path/available');
+    //   return response.map((order) => Order.fromJson(order)).toList();
+    // } catch (e) {
+    return await databaseService.getOrdersByStatus(Status.pending);
+    // }
+  }
+
+  static Future<Order> createOrder(Order order, String userId) async {
+    order.status = Status.pending;
+    order.date = DateTime.now().toIso8601String();
+    order.time = DateTime.now().toIso8601String();
+    return await databaseService.createOrder(order, userId);
+  }
+
+  static Future<void> rateOrder(String orderId, double rating) async {
+    await databaseService.rateOrder(orderId, rating);
+  }
+
+  static Future<void> createOrders() async {
+    try {
+      await ApiService.post(path, orders);
+    } catch (e) {
+      for (var order in orders) {
+        await databaseService.createOrder(order, '156ed1f3-7445-41b0-ac1d-09054eabdaf9');
+      }
+    }
   }
 }

@@ -16,6 +16,7 @@ class Button extends StatelessWidget {
   final ButtonColor color;
   final ButtonVariant variant;
   final String text;
+  final bool loading;
   final void Function() onPressed;
 
   const Button({
@@ -24,6 +25,7 @@ class Button extends StatelessWidget {
     this.variant = ButtonVariant.primary,
     required this.text,
     required this.onPressed,
+    this.loading = false,
   });
 
   @override
@@ -55,7 +57,7 @@ class Button extends StatelessWidget {
               borderRadius: BorderRadius.circular(Tokens.radius8),
             ),
           ),
-          child: Text(text),
+          child: loading ? const CircularProgressIndicator() : Text(text),
         );
         
       case ButtonVariant.outline:

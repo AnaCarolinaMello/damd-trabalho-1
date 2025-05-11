@@ -11,7 +11,7 @@ class OrderItem {
     this.description = '',
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'name': name,
       'description': description,
@@ -20,12 +20,12 @@ class OrderItem {
     };
   }
 
-  factory OrderItem.fromMap(Map<String, dynamic> map) {
+  factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      name: map['name'] as String,
-      description: map['description'] as String,
-      price: map['price'] as double,
-      quantity: map['quantity'] as int,
+      name: json['name'] as String,
+      description: json['description'] as String,
+      price: json['price'] as double,
+      quantity: json['quantity'] as int,
     );
   }
 }

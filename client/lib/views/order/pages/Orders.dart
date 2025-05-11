@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/views/order/components/OrderList.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
-import 'package:damd_trabalho_1/models/OrderItem.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Orders extends StatefulWidget {
   const Orders({super.key});
@@ -19,13 +21,63 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
   late List<Order> _pastOrders;
 
   getOrders() async {
-    _orders = await OrderController.getOrders();
+    final prefs = await SharedPreferences.getInstance();
+    final userId = jsonDecode(prefs.getString('user')!)['id'];
+    _orders = await OrderController.getOrders(userId);
 
     setState(() {
-      _activeOrders = _orders.where((order) => order.status != 'Entregue').toList();
-      _pastOrders = _orders.where((order) => order.status == 'Entregue').toList();
+      _activeOrders =
+          _orders.where((order) => order.status != Status.delivered).toList();
+      _pastOrders =
+          _orders.where((order) => order.status == Status.delivered).toList();
       isLoading = false;
     });
+  }
+
+  void orderAgain(Order order) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = jsonDecode(prefs.getString('user')!)['id'];
+    final newOrder = await OrderController.createOrder(order, userId);
+
+    setState(() {
+      _activeOrders.add(newOrder);
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pedido realizado com sucesso')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Erro ao pedir novamente')));
+  }
+
+  void rateOrder(Order order, double rating) async {
+    if (rating == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, avalie o pedido')),
+      );
+      return;
+    }
+
+    await OrderController.rateOrder(order.id!, rating);
+    if (mounted) {
+      setState(() {
+        order.rating = rating;
+        final index = _pastOrders.indexOf(order);
+        _pastOrders[index] = order;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Avaliação enviada com sucesso')),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Erro ao avaliar o pedido')));
+    }
   }
 
   @override
@@ -56,6 +108,7 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: theme.colorScheme.primary,
@@ -71,7 +124,12 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
           OrderList(orders: _activeOrders, isActive: true),
 
           // Aba de histórico de pedidos
-          OrderList(orders: _pastOrders, isActive: false),
+          OrderList(
+            orders: _pastOrders,
+            isActive: false,
+            orderAgain: orderAgain,
+            rateOrder: rateOrder,
+          ),
         ],
       ),
     );

@@ -24,7 +24,10 @@ class _DeliveryState extends State<Delivery> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Entrega')),
+      appBar: AppBar(
+        title: const Text('Entrega'),
+        automaticallyImplyLeading: false,
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
