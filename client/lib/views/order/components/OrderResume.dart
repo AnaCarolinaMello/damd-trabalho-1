@@ -36,22 +36,6 @@ class OrderResume extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Pedido #${order.id}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: Tokens.fontSize20,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Tokens.spacing16),
-          
-          // Resumo do produto
-          Row(
             children: [
               // Imagem do produto
               productImage,

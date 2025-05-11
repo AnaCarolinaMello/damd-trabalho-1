@@ -69,14 +69,6 @@ class Shop extends StatelessWidget {
                         fontSize: Tokens.fontSize14,
                       ),
                     ),
-                    const SizedBox(width: Tokens.spacing8),
-                    Text(
-                      '• Delivery: 15-25 min',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: Tokens.fontSize14,
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: Tokens.spacing4),
