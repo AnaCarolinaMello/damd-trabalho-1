@@ -7,10 +7,15 @@ import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:damd_trabalho_1/views/setup/pages/Welcome.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:damd_trabalho_1/services/Database.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // INICIALIZA O FIREBASE
 
   // Lock orientation to portrait mode
   await SystemChrome.setPreferredOrientations([
@@ -58,10 +63,62 @@ class _MyApp extends State<MyApp> {
     });
   }
 
+  void setupFirebaseMessaging() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    // Solicita permissão (necessário para iOS, opcional no Android)
+    NotificationSettings settings = await messaging.requestPermission();
+
+    // Obtem token FCM do dispositivo (salve no backend se quiser enviar push por ID)
+    String? token = await messaging.getToken();
+    print("FCM Token: $token");
+
+    // Aparecer as mensagens em foreground (quando o app está aberto)
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        print("Mensagem recebida no foreground: ${message.notification!.title}");
+
+        showDialog(
+          context: navigatorKey.currentContext!,
+          builder: (context) {
+            return AlertDialog(
+              title: Text(message.notification!.title ?? 'Notificação'),
+              content: Text(message.notification!.body ?? ''),
+              actions: [
+               TextButton(
+                 onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("OK"),
+               ),
+              ],
+            );
+          },
+        );
+      }
+    });
+
+
+   // Mensagem quando o app é aberto via notificação
+   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('onMessageOpenedApp: ${message.data}');
+
+    final screen = message.data['screen'];
+      if (screen == 'orders') {
+        navigatorKey.currentState?.pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => const MainScreen(item: 'orders'),
+         ),
+       );
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     getUser();
+    setupFirebaseMessaging();
   }
 
   @override
@@ -74,6 +131,7 @@ class _MyApp extends State<MyApp> {
             darkTheme: darkTheme,
             themeMode: themeNotifier.themeMode,
             debugShowCheckedModeBanner: false,
+            navigatorKey: navigatorKey,
             home:
                 loading
                     ? const Center(child: CircularProgressIndicator())
