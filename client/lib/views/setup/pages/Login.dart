@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
       _passwordController.text,
     );
 
-    await OrderController.createOrders();
+    // await OrderController.createOrders();
 
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('user', jsonEncode(user?.toJson()));

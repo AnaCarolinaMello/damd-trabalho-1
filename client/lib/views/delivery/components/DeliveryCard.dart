@@ -8,7 +8,7 @@ import 'package:damd_trabalho_1/utils/index.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
 import 'package:damd_trabalho_1/models/User.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:damd_trabalho_1/views/delivery/pages/Delivery.dart';
+import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 
 class DeliveryCard extends StatefulWidget {
   final Order? order;
@@ -33,7 +33,7 @@ class _DeliveryCardState extends State<DeliveryCard> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => Delivery(order: widget.order!),
+        builder: (context) => const MainScreen(),
       ),
     );
     setState(() {
