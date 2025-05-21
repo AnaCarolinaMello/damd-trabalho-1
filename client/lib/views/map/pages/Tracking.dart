@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:damd_trabalho_1/models/Driver.dart' as DriverModel;
@@ -27,12 +28,19 @@ class _TrackingState extends State<Tracking> {
   bool isDarkMode = false;
   bool isLoading = true;
   late GoogleMapController mapController;
-  GoogleMapsPolyline polyline = GoogleMapsPolyline();
   final Map<String, Marker> _markers = {};
   final Set<Polyline> _polylines = {};
   late LatLng _destination = const LatLng(40.6782, -73.9442);
   late LatLng _location = const LatLng(40.6944, -73.9212);
   DriverModel.Driver? driver;
+
+  // GPX route simulation variables
+  String? _gpxFilePath;
+  List<LatLng>? _routePoints;
+  double _simulationProgress = 0.0;
+  Timer? _simulationTimer;
+  final double _simulationDuration = 180; // 3 minutes in seconds
+  final double _simulationUpdateInterval = 1; // Update every second
 
   void _onMapCreated(GoogleMapController controller) async {
     mapController = controller;
@@ -41,7 +49,7 @@ class _TrackingState extends State<Tracking> {
   void init() async {
     await getDriver();
     await getAddress();
-    await getRoute();
+    await setupRouteSimulation();
     await getRouteDuration();
     getMakers();
   }
@@ -58,10 +66,10 @@ class _TrackingState extends State<Tracking> {
         ),
       );
       final marker2 = Marker(
-        markerId: MarkerId('Localização do motorista'),
+        markerId: const MarkerId('Localização do motorista'),
         position: LatLng(_location.latitude, _location.longitude),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
-        infoWindow: InfoWindow(
+        infoWindow: const InfoWindow(
           title: 'Localização do motorista',
           snippet: 'Localização do motorista',
         ),
@@ -72,33 +80,107 @@ class _TrackingState extends State<Tracking> {
     });
   }
 
-  getRoute() async {
-    final result = await polyline.getRouteBetweenCoordinates(
-      "<YOUR_API_KEY>",
-      MyPointLatLng(_destination.latitude, _destination.longitude),
-      MyPointLatLng(_location.latitude, _location.longitude),
-      travelMode: MyTravelMode.driving,
-    );
-    if (result.status == "OK" && result.points.isNotEmpty) {
-      List<LatLng> polylineCoordinates = [];
-      for (var point in result.points) {
-        polylineCoordinates.add(LatLng(point.latitude!, point.longitude!));
-      }
+  /// Set up the route simulation
+  Future<void> setupRouteSimulation() async {
+    try {
+      // Get or create GPX file for the route
+      _gpxFilePath = await RouteService.getOrCreateGpxFile(
+        _location,
+        _destination,
+        widget.order.id ?? 'route',
+      );
 
+      // Get route points for polyline
+      _routePoints = await RouteService.getRoutePoints(_location, _destination);
+
+      // Draw the polyline
+      drawPolyline();
+
+      // Start the simulation
+      startSimulation();
+    } catch (e) {
+      print('Error setting up route simulation: $e');
+    }
+  }
+
+  /// Draw the polyline on the map
+  void drawPolyline() {
+    if (_routePoints == null || _routePoints!.isEmpty) return;
+
+    setState(() {
+      _polylines.add(
+        Polyline(
+          polylineId: const PolylineId("routePolyline"),
+          visible: true,
+          geodesic: true,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+          points: _routePoints!,
+          color: Colors.blue,
+          width: 5,
+        ),
+      );
+    });
+  }
+
+  /// Start the driver movement simulation
+  void startSimulation() {
+    if (_gpxFilePath == null) return;
+
+    // Cancel any existing timer
+    _simulationTimer?.cancel();
+
+    // Start a timer to update the driver's position
+    _simulationTimer = Timer.periodic(
+      Duration(seconds: _simulationUpdateInterval.toInt()),
+      (timer) async {
+        // Update progress
+        setState(() {
+          _simulationProgress += _simulationUpdateInterval / _simulationDuration;
+
+          // Reset when complete
+          if (_simulationProgress >= 1.0) {
+            _simulationProgress = 0.0;
+          }
+        });
+
+        // Update driver position
+        await updateDriverPosition();
+      },
+    );
+  }
+
+  /// Update the driver's position based on the current progress
+  Future<void> updateDriverPosition() async {
+    if (_gpxFilePath == null) return;
+
+    try {
+      // Get the new position
+      final newPosition = await RouteService.simulateDriverPosition(
+        _gpxFilePath!,
+        _simulationProgress,
+      );
+
+      // Update the map
       setState(() {
-        _polylines.add(
-          Polyline(
-            polylineId: const PolylineId("polylineIdString"),
-            visible: true,
-            geodesic: true,
-            startCap: Cap.roundCap,
-            endCap: Cap.roundCap,
-            points: polylineCoordinates,
-            color: Colors.blue,
-            width: 5,
+        _location = newPosition;
+
+        // Update the marker
+        _markers['Localização do motorista'] = Marker(
+          markerId: const MarkerId('Localização do motorista'),
+          position: newPosition,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+          infoWindow: const InfoWindow(
+            title: 'Localização do motorista',
+            snippet: 'Localização do motorista',
           ),
         );
       });
+
+      // Move the camera to follow the driver
+      mapController.animateCamera(CameraUpdate.newLatLng(newPosition));
+    } catch (e) {
+      print('Error updating driver position: $e');
     }
   }
 
@@ -145,6 +227,13 @@ class _TrackingState extends State<Tracking> {
     init();
   }
 
+  @override
+  void dispose() {
+    // Cancel the simulation timer
+    _simulationTimer?.cancel();
+    super.dispose();
+  }
+
   // Informações da viagem
   final String pickupPoint = 'Ponto de encontro: Shopping Center';
 
@@ -166,7 +255,7 @@ class _TrackingState extends State<Tracking> {
               ? const Center(child: CircularProgressIndicator())
               : Column(
                 children: [
-                  // Desenho simulado de estrada
+                  // Map showing real-time driver movement
                   Expanded(
                     child: GoogleMap(
                       onMapCreated: _onMapCreated,
@@ -179,7 +268,7 @@ class _TrackingState extends State<Tracking> {
                     ),
                   ),
 
-                  // Card inferior com detalhes do motorista
+                  // Driver information card
                   Driver(driver: driver!),
                 ],
               ),

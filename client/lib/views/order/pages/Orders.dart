@@ -22,7 +22,9 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
 
   getOrders() async {
     final prefs = await SharedPreferences.getInstance();
+    print(prefs.getString('user'));
     final userId = jsonDecode(prefs.getString('user')!)['id'];
+    print(userId);
     _orders = await OrderController.getOrders(userId);
 
     setState(() {

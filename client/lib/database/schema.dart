@@ -67,6 +67,6 @@ CREATE INDEX idx_users_email ON users (email);
 CREATE INDEX idx_orders_customer ON orders (customer_id);
 CREATE INDEX idx_orders_driver ON orders (driver_id);
 CREATE INDEX idx_orders_status ON orders (status);
-CREATE INDEX idx_order_items_order ON order_items (order_id); 
+CREATE INDEX idx_order_items_order ON order_items (order_id);
 ''';
 }
