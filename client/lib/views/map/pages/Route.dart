@@ -36,6 +36,10 @@ class _RouteState extends State<RoutePage> {
   final double _simulationUpdateInterval = 1; // Update every second
   bool _isSimulating = false;
 
+  // Real-time location tracking variables
+  StreamSubscription<Position>? _locationSubscription;
+  bool _useRealTimeLocation = false;
+
   void _onMapCreated(GoogleMapController controller) async {
     mapController = controller;
   }
@@ -104,6 +108,160 @@ class _RouteState extends State<RoutePage> {
     });
   }
 
+  /// Start tracking the driver's real location instead of simulating
+  Future<void> startRealTimeLocationTracking() async {
+    // Cancel simulation if running
+    if (_isSimulating) {
+      stopSimulation();
+    }
+
+    _locationSubscription?.cancel();
+
+    // Make sure location services and permissions are available
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled
+      print('Location services are disabled');
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied
+        print('Location permissions are denied');
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever
+      print('Location permissions are permanently denied');
+      return;
+    }
+
+    // Start listening to location changes
+    setState(() {
+      _useRealTimeLocation = true;
+    });
+
+    // Get current position first
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    // Update the marker with current position
+    updateDriverMarker(LatLng(position.latitude, position.longitude));
+
+    // Subscribe to location updates
+    _locationSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, // Update every 10 meters
+      ),
+    ).listen((Position position) {
+      if (_useRealTimeLocation) {
+        // Update driver position with real GPS location
+        updateDriverMarker(LatLng(position.latitude, position.longitude));
+      }
+    });
+  }
+
+  /// Stop real-time location tracking
+  void stopRealTimeLocationTracking() {
+    _locationSubscription?.cancel();
+    setState(() {
+      _useRealTimeLocation = false;
+    });
+  }
+
+  /// Update the driver's marker with a new position
+  void updateDriverMarker(LatLng position) {
+    setState(() {
+      _location = position;
+
+      // Update the marker
+      _markers['Sua localização'] = Marker(
+        markerId: const MarkerId('Sua localização'),
+        position: position,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+        infoWindow: const InfoWindow(
+          title: 'Sua localização',
+          snippet: 'Sua localização',
+        ),
+      );
+    });
+
+    // Move the camera to follow the driver
+    mapController.animateCamera(CameraUpdate.newLatLng(position));
+
+    // Recalculate route
+    updateRoute(position);
+  }
+
+  /// Update the route and duration based on new driver position
+  Future<void> updateRoute(LatLng position) async {
+    // Update route duration
+    try {
+      final timeDistance = await RouteService.getRouteDuration(
+        position,
+        _destination,
+      );
+      setState(() {
+        _timeDistance = timeDistance;
+        _gettingTimeDistance = false;
+      });
+
+      // Update route points if significantly different
+      if (_shouldUpdateRoute(position)) {
+        // Get new route points
+        _routePoints = await RouteService.getRoutePoints(position, _destination);
+
+        // Update polyline
+        setState(() {
+          _polylines.clear();
+          drawPolyline();
+        });
+
+        // Update GPX file for the new route
+        _gpxFilePath = await RouteService.getOrCreateGpxFile(
+          position,
+          _destination,
+          widget.order.id ?? 'route-${DateTime.now().millisecondsSinceEpoch}',
+        );
+      }
+    } catch (e) {
+      print('Error updating route: $e');
+    }
+  }
+
+  /// Determine if route needs to be recalculated based on distance from original path
+  bool _shouldUpdateRoute(LatLng currentPosition) {
+    // If no route points yet, always update
+    if (_routePoints == null || _routePoints!.isEmpty) {
+      return true;
+    }
+
+    // Find closest point on current route
+    double minDistance = double.infinity;
+    for (var point in _routePoints!) {
+      final distance = Geolocator.distanceBetween(
+        currentPosition.latitude,
+        currentPosition.longitude,
+        point.latitude,
+        point.longitude
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+      }
+    }
+
+    // If driver is more than 50 meters from route, update route
+    return minDistance > 50;
+  }
+
   /// Set up the route simulation
   Future<void> setupRouteSimulation() async {
     try {
@@ -165,6 +323,9 @@ class _RouteState extends State<RoutePage> {
     // Cancel any existing timer
     _simulationTimer?.cancel();
 
+    // Stop real-time tracking if active
+    stopRealTimeLocationTracking();
+
     // Start a timer to update the driver's position
     _simulationTimer = Timer.periodic(
       Duration(seconds: _simulationUpdateInterval.toInt()),
@@ -205,24 +366,8 @@ class _RouteState extends State<RoutePage> {
         _simulationProgress,
       );
 
-      // Update the map
-      setState(() {
-        _location = newPosition;
-
-        // Update the marker
-        _markers['Sua localização'] = Marker(
-          markerId: const MarkerId('Sua localização'),
-          position: newPosition,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
-          infoWindow: const InfoWindow(
-            title: 'Sua localização',
-            snippet: 'Sua localização',
-          ),
-        );
-      });
-
-      // Move the camera to follow the driver
-      mapController.animateCamera(CameraUpdate.newLatLng(newPosition));
+      // Update the marker
+      updateDriverMarker(newPosition);
     } catch (e) {
       print('Error updating driver position: $e');
     }
@@ -273,6 +418,8 @@ class _RouteState extends State<RoutePage> {
   void dispose() {
     // Cancel the simulation timer
     _simulationTimer?.cancel();
+    // Cancel location subscription
+    _locationSubscription?.cancel();
     super.dispose();
   }
 
@@ -320,9 +467,19 @@ class _RouteState extends State<RoutePage> {
                                 Text('Tempo estimado: ${_timeDistance?.time ?? 'Sem estimativa'}'),
                                 Text('Distância: ${_timeDistance?.distance ?? 'Sem estimativa'}'),
                                 const SizedBox(height: Tokens.spacing12),
-                                ElevatedButton(
-                                  onPressed: toggleSimulation,
-                                  child: Text(_isSimulating ? 'Parar simulação' : 'Simular rota'),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: toggleSimulation,
+                                      child: Text(_isSimulating ? 'Parar simulação' : 'Simular rota'),
+                                    ),
+                                    const SizedBox(width: Tokens.spacing12),
+                                    ElevatedButton(
+                                      onPressed: _useRealTimeLocation ? stopRealTimeLocationTracking : startRealTimeLocationTracking,
+                                      child: Text(_useRealTimeLocation ? 'Parar GPS real' : 'Usar GPS real'),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

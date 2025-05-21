@@ -42,6 +42,10 @@ class _TrackingState extends State<Tracking> {
   final double _simulationDuration = 180; // 3 minutes in seconds
   final double _simulationUpdateInterval = 1; // Update every second
 
+  // Real-time location tracking variables
+  StreamSubscription<Position>? _locationSubscription;
+  bool _useRealTimeLocation = false;
+
   void _onMapCreated(GoogleMapController controller) async {
     mapController = controller;
   }
@@ -78,6 +82,110 @@ class _TrackingState extends State<Tracking> {
       _markers['Localização do motorista'] = marker2;
       isLoading = false;
     });
+  }
+
+  /// Start tracking the driver's real location instead of simulating
+  Future<void> startRealTimeLocationTracking() async {
+    // Cancel simulation if running
+    _simulationTimer?.cancel();
+    _locationSubscription?.cancel();
+
+    // Check location permissions
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled
+      print('Location services are disabled');
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied
+        print('Location permissions are denied');
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever
+      print('Location permissions are permanently denied');
+      return;
+    }
+
+    // Start listening to location changes
+    setState(() {
+      _useRealTimeLocation = true;
+    });
+
+    // Get current position first
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    // Update the marker with current position
+    updateDriverMarker(LatLng(position.latitude, position.longitude));
+
+    // Subscribe to location updates
+    _locationSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, // Update every 10 meters
+      ),
+    ).listen((Position position) {
+      if (_useRealTimeLocation) {
+        // Update driver position with real GPS location
+        updateDriverMarker(LatLng(position.latitude, position.longitude));
+      }
+    });
+  }
+
+  /// Stop real-time location tracking
+  void stopRealTimeLocationTracking() {
+    _locationSubscription?.cancel();
+    setState(() {
+      _useRealTimeLocation = false;
+    });
+  }
+
+  /// Update the driver's marker with a new position
+  void updateDriverMarker(LatLng position) {
+    setState(() {
+      _location = position;
+
+      // Update the marker
+      _markers['Localização do motorista'] = Marker(
+        markerId: const MarkerId('Localização do motorista'),
+        position: position,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+        infoWindow: const InfoWindow(
+          title: 'Localização do motorista',
+          snippet: 'Localização do motorista',
+        ),
+      );
+    });
+
+    // Move the camera to follow the driver
+    mapController.animateCamera(CameraUpdate.newLatLng(position));
+
+    // Recalculate route duration if needed
+    updateRouteDuration();
+  }
+
+  /// Update the route duration based on new driver position
+  Future<void> updateRouteDuration() async {
+    try {
+      final duration = await RouteService.getRouteDuration(
+        _location,
+        _destination,
+      );
+      setState(() {
+        driver?.arrivalTime = duration?.time;
+      });
+    } catch (e) {
+      print('Error updating route duration: $e');
+    }
   }
 
   /// Set up the route simulation
@@ -130,6 +238,9 @@ class _TrackingState extends State<Tracking> {
     // Cancel any existing timer
     _simulationTimer?.cancel();
 
+    // Stop real-time tracking if active
+    stopRealTimeLocationTracking();
+
     // Start a timer to update the driver's position
     _simulationTimer = Timer.periodic(
       Duration(seconds: _simulationUpdateInterval.toInt()),
@@ -161,24 +272,8 @@ class _TrackingState extends State<Tracking> {
         _simulationProgress,
       );
 
-      // Update the map
-      setState(() {
-        _location = newPosition;
-
-        // Update the marker
-        _markers['Localização do motorista'] = Marker(
-          markerId: const MarkerId('Localização do motorista'),
-          position: newPosition,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
-          infoWindow: const InfoWindow(
-            title: 'Localização do motorista',
-            snippet: 'Localização do motorista',
-          ),
-        );
-      });
-
-      // Move the camera to follow the driver
-      mapController.animateCamera(CameraUpdate.newLatLng(newPosition));
+      // Update the marker
+      updateDriverMarker(newPosition);
     } catch (e) {
       print('Error updating driver position: $e');
     }
@@ -231,6 +326,8 @@ class _TrackingState extends State<Tracking> {
   void dispose() {
     // Cancel the simulation timer
     _simulationTimer?.cancel();
+    // Cancel location subscription
+    _locationSubscription?.cancel();
     super.dispose();
   }
 
