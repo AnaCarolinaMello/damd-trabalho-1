@@ -186,7 +186,7 @@ class DatabaseService {
   Future<Driver?> getDriver(String id) async {
     final db = await instance.database;
     final maps = await db.rawQuery('''
-      SELECT u.*, 
+      SELECT u.*,
         COALESCE(AVG(o.rating), 0) as rating,
         COUNT(o.id) as trips
       FROM users u
@@ -437,7 +437,7 @@ class DatabaseService {
 
     final List<Map<String, dynamic>> orderMaps = await db.rawQuery(
       '''
-      SELECT o.*, 
+      SELECT o.*,
       json_object(
         'id', a.id,
         'street', a.street,

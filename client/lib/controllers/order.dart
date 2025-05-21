@@ -12,19 +12,19 @@ class OrderController {
   static List<Order> orders = [
     Order(
       id: '4752348',
-      name: 'Restaurante Sabor Caseiro',
+      name: 'Restaurante Do Sabor',
       description: 'Prato do dia + sobremesa',
       date: 'Hoje',
       time: '12:30',
       status: Status.pending,
       address: Address(
-        street: 'Rua das Flores',
+        street: 'Market Street',
         number: '123',
-        complement: 'Apto 123',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',  
-        state: 'SP',
-        zipCode: '01310-100',
+        complement: 'Apt 123',
+        neighborhood: 'SoMa',
+        city: 'San Francisco',
+        state: 'CA',
+        zipCode: '94103',
       ),
       deliveryFee: 5.0,
       discount: 2.0,
@@ -32,119 +32,7 @@ class OrderController {
         OrderItem(name: 'Prato do dia', price: 25.0, quantity: 1),
         OrderItem(name: 'Sovermesa', price: 12.90, quantity: 1),
       ],
-    ),
-    Order(
-      id: '4752341',
-      name: 'Supermercado Livre',
-      description: '8 itens',
-      date: 'Hoje',
-      time: '10:45',
-      status: Status.accepted,
-      deliveryFee: 5.0,
-      discount: 2.0,
-      address: Address(
-        street: 'Rua das Flores',
-        number: '123',
-        complement: 'Apto 123',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',
-        state: 'SP',
-        zipCode: '01310-100',
-      ),
-      items: [
-        OrderItem(name: 'Arroz', price: 10.0, quantity: 2),
-        OrderItem(name: 'Feijão', price: 8.0, quantity: 1),
-      ],
-    ),
-    Order(
-      id: '4751598',
-      name: 'Farmácia Bem Estar',
-      description: '3 itens',
-      date: '12 Set',
-      time: '16:20',
-      status: Status.delivered,
-      rating: 4.0,
-      deliveryFee: 5.0,
-      discount: 2.0,
-      address: Address(
-        street: 'Rua das Flores',
-        number: '123',
-        complement: 'Apto 123',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',
-        state: 'SP',
-        zipCode: '01310-100',
-      ),
-      items: [
-        OrderItem(name: 'Paracetamol', price: 10.0, quantity: 2),
-        OrderItem(name: 'Ibuprofeno', price: 8.0, quantity: 1),
-      ],
-    ),
-    Order(
-      id: '4751256',
-      name: 'Açaí do Nordeste',
-      description: 'Açaí 500ml + Complementos',
-      date: '10 Set',
-      time: '19:15',
-      status: Status.delivered,
-      rating: 5.0,
-      deliveryFee: 5.0,
-      discount: 2.0,
-      address: Address(
-        street: 'Rua das Flores',
-        number: '123',
-        complement: 'Apto 123',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',
-        state: 'SP',
-        zipCode: '01310-100',
-      ),
-      items: [OrderItem(name: 'Açaí', price: 23.90, quantity: 1)],
-    ),
-    Order(
-      id: '4750928',
-      name: 'Hamburgueria Artesanal',
-      description: 'Combo X-Tudo',
-      date: '05 Set',
-      time: '20:45',
-      status: Status.delivered,
-      rating: 3.5,
-      deliveryFee: 5.0,
-      discount: 2.0,
-      address: Address(
-        street: 'Rua das Flores',
-        number: '123',
-        complement: 'Apto 123',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',
-        state: 'SP',
-        zipCode: '01310-100',
-      ),
-      items: [OrderItem(name: 'Combo X-Tudo', price: 42.50, quantity: 1)],
-    ),
-    Order(
-      id: '4750348',
-      name: 'Pizza Express',
-      description: 'Pizza Grande Marguerita',
-      date: '02 Set',
-      time: '21:10',
-      status: Status.delivered,
-      rating: 4.5,
-      deliveryFee: 5.0,
-      discount: 2.0,
-      address: Address(
-        street: 'Rua das Flores',
-        number: '123',
-        complement: 'Apto 123',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',
-        state: 'SP',
-        zipCode: '01310-100',
-      ),
-      items: [
-        OrderItem(name: 'Pizza Grande Marguerita', price: 49.90, quantity: 1),
-      ],
-    ),
+    )
   ];
 
   static Future<List<Order>> getOrders(String userId) async {
@@ -214,7 +102,7 @@ class OrderController {
       await ApiService.post(path, orders);
     } catch (e) {
       for (var order in orders) {
-        await databaseService.createOrder(order, '156ed1f3-7445-41b0-ac1d-09054eabdaf9');
+        await databaseService.createOrder(order, 'e85e1f47-e907-4967-a08f-fa1018f8d80e');
       }
     }
   }

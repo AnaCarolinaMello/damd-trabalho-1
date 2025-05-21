@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:damd_trabalho_1/models/Driver.dart' as DriverModel;
@@ -27,12 +28,23 @@ class _TrackingState extends State<Tracking> {
   bool isDarkMode = false;
   bool isLoading = true;
   late GoogleMapController mapController;
-  GoogleMapsPolyline polyline = GoogleMapsPolyline();
   final Map<String, Marker> _markers = {};
   final Set<Polyline> _polylines = {};
   late LatLng _destination = const LatLng(40.6782, -73.9442);
   late LatLng _location = const LatLng(40.6944, -73.9212);
   DriverModel.Driver? driver;
+
+  // GPX route simulation variables
+  String? _gpxFilePath;
+  List<LatLng>? _routePoints;
+  double _simulationProgress = 0.0;
+  Timer? _simulationTimer;
+  final double _simulationDuration = 180; // 3 minutes in seconds
+  final double _simulationUpdateInterval = 1; // Update every second
+
+  // Real-time location tracking variables
+  StreamSubscription<Position>? _locationSubscription;
+  bool _useRealTimeLocation = false;
 
   void _onMapCreated(GoogleMapController controller) async {
     mapController = controller;
@@ -41,7 +53,7 @@ class _TrackingState extends State<Tracking> {
   void init() async {
     await getDriver();
     await getAddress();
-    await getRoute();
+    await setupRouteSimulation();
     await getRouteDuration();
     getMakers();
   }
@@ -58,10 +70,10 @@ class _TrackingState extends State<Tracking> {
         ),
       );
       final marker2 = Marker(
-        markerId: MarkerId('Localização do motorista'),
+        markerId: const MarkerId('Localização do motorista'),
         position: LatLng(_location.latitude, _location.longitude),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
-        infoWindow: InfoWindow(
+        infoWindow: const InfoWindow(
           title: 'Localização do motorista',
           snippet: 'Localização do motorista',
         ),
@@ -72,33 +84,198 @@ class _TrackingState extends State<Tracking> {
     });
   }
 
-  getRoute() async {
-    final result = await polyline.getRouteBetweenCoordinates(
-      "<YOUR_API_KEY>",
-      MyPointLatLng(_destination.latitude, _destination.longitude),
-      MyPointLatLng(_location.latitude, _location.longitude),
-      travelMode: MyTravelMode.driving,
-    );
-    if (result.status == "OK" && result.points.isNotEmpty) {
-      List<LatLng> polylineCoordinates = [];
-      for (var point in result.points) {
-        polylineCoordinates.add(LatLng(point.latitude!, point.longitude!));
-      }
+  /// Start tracking the driver's real location instead of simulating
+  Future<void> startRealTimeLocationTracking() async {
+    // Cancel simulation if running
+    _simulationTimer?.cancel();
+    _locationSubscription?.cancel();
 
+    // Check location permissions
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled
+      print('Location services are disabled');
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied
+        print('Location permissions are denied');
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever
+      print('Location permissions are permanently denied');
+      return;
+    }
+
+    // Start listening to location changes
+    setState(() {
+      _useRealTimeLocation = true;
+    });
+
+    // Get current position first
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    // Update the marker with current position
+    updateDriverMarker(LatLng(position.latitude, position.longitude));
+
+    // Subscribe to location updates
+    _locationSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, // Update every 10 meters
+      ),
+    ).listen((Position position) {
+      if (_useRealTimeLocation) {
+        // Update driver position with real GPS location
+        updateDriverMarker(LatLng(position.latitude, position.longitude));
+      }
+    });
+  }
+
+  /// Stop real-time location tracking
+  void stopRealTimeLocationTracking() {
+    _locationSubscription?.cancel();
+    setState(() {
+      _useRealTimeLocation = false;
+    });
+  }
+
+  /// Update the driver's marker with a new position
+  void updateDriverMarker(LatLng position) {
+    setState(() {
+      _location = position;
+
+      // Update the marker
+      _markers['Localização do motorista'] = Marker(
+        markerId: const MarkerId('Localização do motorista'),
+        position: position,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+        infoWindow: const InfoWindow(
+          title: 'Localização do motorista',
+          snippet: 'Localização do motorista',
+        ),
+      );
+    });
+
+    // Move the camera to follow the driver
+    mapController.animateCamera(CameraUpdate.newLatLng(position));
+
+    // Recalculate route duration if needed
+    updateRouteDuration();
+  }
+
+  /// Update the route duration based on new driver position
+  Future<void> updateRouteDuration() async {
+    try {
+      final duration = await RouteService.getRouteDuration(
+        _location,
+        _destination,
+      );
       setState(() {
-        _polylines.add(
-          Polyline(
-            polylineId: const PolylineId("polylineIdString"),
-            visible: true,
-            geodesic: true,
-            startCap: Cap.roundCap,
-            endCap: Cap.roundCap,
-            points: polylineCoordinates,
-            color: Colors.blue,
-            width: 5,
-          ),
-        );
+        driver?.arrivalTime = duration?.time;
       });
+    } catch (e) {
+      print('Error updating route duration: $e');
+    }
+  }
+
+  /// Set up the route simulation
+  Future<void> setupRouteSimulation() async {
+    try {
+      // Get or create GPX file for the route
+      _gpxFilePath = await RouteService.getOrCreateGpxFile(
+        _location,
+        _destination,
+        widget.order.id ?? 'route',
+      );
+
+      // Get route points for polyline
+      _routePoints = await RouteService.getRoutePoints(_location, _destination);
+
+      // Draw the polyline
+      drawPolyline();
+
+      // Start the simulation
+      startSimulation();
+    } catch (e) {
+      print('Error setting up route simulation: $e');
+    }
+  }
+
+  /// Draw the polyline on the map
+  void drawPolyline() {
+    if (_routePoints == null || _routePoints!.isEmpty) return;
+
+    setState(() {
+      _polylines.add(
+        Polyline(
+          polylineId: const PolylineId("routePolyline"),
+          visible: true,
+          geodesic: true,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+          points: _routePoints!,
+          color: Colors.blue,
+          width: 5,
+        ),
+      );
+    });
+  }
+
+  /// Start the driver movement simulation
+  void startSimulation() {
+    if (_gpxFilePath == null) return;
+
+    // Cancel any existing timer
+    _simulationTimer?.cancel();
+
+    // Stop real-time tracking if active
+    stopRealTimeLocationTracking();
+
+    // Start a timer to update the driver's position
+    _simulationTimer = Timer.periodic(
+      Duration(seconds: _simulationUpdateInterval.toInt()),
+      (timer) async {
+        // Update progress
+        setState(() {
+          _simulationProgress += _simulationUpdateInterval / _simulationDuration;
+
+          // Reset when complete
+          if (_simulationProgress >= 1.0) {
+            _simulationProgress = 0.0;
+          }
+        });
+
+        // Update driver position
+        await updateDriverPosition();
+      },
+    );
+  }
+
+  /// Update the driver's position based on the current progress
+  Future<void> updateDriverPosition() async {
+    if (_gpxFilePath == null) return;
+
+    try {
+      // Get the new position
+      final newPosition = await RouteService.simulateDriverPosition(
+        _gpxFilePath!,
+        _simulationProgress,
+      );
+
+      // Update the marker
+      updateDriverMarker(newPosition);
+    } catch (e) {
+      print('Error updating driver position: $e');
     }
   }
 
@@ -145,6 +322,15 @@ class _TrackingState extends State<Tracking> {
     init();
   }
 
+  @override
+  void dispose() {
+    // Cancel the simulation timer
+    _simulationTimer?.cancel();
+    // Cancel location subscription
+    _locationSubscription?.cancel();
+    super.dispose();
+  }
+
   // Informações da viagem
   final String pickupPoint = 'Ponto de encontro: Shopping Center';
 
@@ -166,7 +352,7 @@ class _TrackingState extends State<Tracking> {
               ? const Center(child: CircularProgressIndicator())
               : Column(
                 children: [
-                  // Desenho simulado de estrada
+                  // Map showing real-time driver movement
                   Expanded(
                     child: GoogleMap(
                       onMapCreated: _onMapCreated,
@@ -179,7 +365,7 @@ class _TrackingState extends State<Tracking> {
                     ),
                   ),
 
-                  // Card inferior com detalhes do motorista
+                  // Driver information card
                   Driver(driver: driver!),
                 ],
               ),
