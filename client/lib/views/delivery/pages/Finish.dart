@@ -103,33 +103,11 @@ class _FinishDeliveryState extends State<FinishDelivery> {
       return;
     }
 
-    showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Entrega concluída'),
-        content: Text('O pedido #${widget.order.id} foi entregue com sucesso.'),
-        actions: [
-          TextButton(
-            child: const Text('OK'),
-            onPressed: () {
-              Navigator.of(context).pop(); // Fecha o dialog
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const MainScreen()),
-              );
-            },
-          ),
-        ],
-      );
-    },
-  );
-
     // Return to the previous screen with success message
-    // Navigator.push(
-      // context,
-     //  MaterialPageRoute(builder: (context) => const MainScreen()),
-    // );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MainScreen()),
+    );
   }
 
   @override

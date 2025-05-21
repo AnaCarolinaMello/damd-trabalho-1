@@ -69,7 +69,7 @@ final ThemeData light = ThemeData(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radius8)),
     ),
   ),
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     color: Tokens.neutral0,
     elevation: 2,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Tokens.radius12)),

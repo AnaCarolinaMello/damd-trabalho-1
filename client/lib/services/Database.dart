@@ -519,6 +519,40 @@ class DatabaseService {
     );
   }
 
+  Future<List<Order>> getUnsyncedOrders() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'orders',
+      where: 'is_synced = ?',
+      whereArgs: [0],
+    );
+    return maps.map((map) => Order.fromJson(map)).toList();
+  }
+
+  Future<void> syncWithServer(List<dynamic> serverOrders) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      for (final orderData in serverOrders) {
+        final order = Order.fromJson(orderData);
+        await txn.insert(
+          'orders',
+          order.toJson(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+  }
+
+  Future<int> updateOrder(Order order) async {
+    final db = await database;
+    return await db.update(
+      'orders',
+      order.toJson(),
+      where: 'id = ?',
+      whereArgs: [order.id],
+    );
+  }
+
   // Close the database
   Future close() async {
     final db = await instance.database;

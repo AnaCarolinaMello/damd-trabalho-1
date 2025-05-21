@@ -7,33 +7,34 @@ import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:damd_trabalho_1/views/setup/pages/Welcome.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:damd_trabalho_1/services/Database.dart';
+import 'package:damd_trabalho_1/services/Sync_service.dart';
 
 void main() async {
-  // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Lock orientation to portrait mode
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Initialize shared preferences
   await SharedPreferences.getInstance();
 
-  // Initialize database with error handling
+  final databaseService = DatabaseService.instance;
   try {
-    await DatabaseService.instance.database;
+    await databaseService.database;
     print("Database initialized successfully");
   } catch (e) {
     print("Error initializing database: $e");
-    // Continue with app startup even if database fails
-    // The app will handle database errors gracefully
   }
 
+  final syncService = SyncService(databaseService: databaseService);
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeNotifier(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+        Provider<SyncService>(create: (_) => syncService),
+      ],
       child: const MyApp(),
     ),
   );
@@ -41,16 +42,29 @@ void main() async {
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
   @override
-  State<MyApp> createState() => _MyApp();
+  State<MyApp> createState() => _MyAppState();
 }
 
-class _MyApp extends State<MyApp> {
-  // This widget is the root of your application.
+class _MyAppState extends State<MyApp> {
   late String user;
   bool loading = true;
+  late SyncService syncService;
 
-  getUser() async {
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    await getUser();
+    syncService = Provider.of<SyncService>(context, listen: false);
+    syncService.initializeSync();
+  }
+
+  Future<void> getUser() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       user = prefs.getString('user') ?? '';
@@ -59,28 +73,26 @@ class _MyApp extends State<MyApp> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    getUser();
+  void dispose() {
+    syncService.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeNotifier>(
-      builder:
-          (context, themeNotifier, child) => MaterialApp(
-            title: 'Serviço de Rastreio',
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            themeMode: themeNotifier.themeMode,
-            debugShowCheckedModeBanner: false,
-            home:
-                loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : user != null
-                    ? MainScreen()
-                    : const WelcomePage(),
-          ),
+      builder: (context, themeNotifier, child) => MaterialApp(
+        title: 'Serviço de Rastreio',
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: themeNotifier.themeMode,
+        debugShowCheckedModeBanner: false,
+        home: loading
+            ? const Center(child: CircularProgressIndicator())
+            : user.isNotEmpty
+            ? MainScreen()
+            : const WelcomePage(),
+      ),
     );
   }
 }

@@ -103,7 +103,7 @@ class _RouteState extends State<RoutePage> {
 
   getRoute() async {
     final result = await polyline.getRouteBetweenCoordinates(
-      "<YOUR_API_KEY>",
+      "<YOUR_APIKEY>",
       MyPointLatLng(_destination.latitude, _destination.longitude),
       MyPointLatLng(_location.latitude, _location.longitude),
       travelMode: MyTravelMode.driving,

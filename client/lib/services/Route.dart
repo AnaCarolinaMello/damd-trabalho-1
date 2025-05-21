@@ -12,7 +12,7 @@ class RouteService {
     final destinationString =
         "${destination.latitude}, ${destination.longitude}";
     final url = Uri.parse(
-      'https://maps.googleapis.com/maps/api/distancematrix/json?origins=$originString&destinations=$destinationString&key=<YOUR_API_KEY>',
+      'https://maps.googleapis.com/maps/api/distancematrix/json?origins=$originString&destinations=$destinationString&key=<YOUR_APIKEY>',
     );
     final response = await http.get(url);
     print('response: $response');
