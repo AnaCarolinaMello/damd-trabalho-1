@@ -7,6 +7,7 @@ import 'package:damd_trabalho_1/views/order/components/Shop.dart';
 import 'package:damd_trabalho_1/views/delivery/components/PhotoPreview.dart';
 import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FinishDelivery extends StatefulWidget {
   final Order order;
@@ -23,12 +24,19 @@ class _FinishDeliveryState extends State<FinishDelivery> {
   XFile? _photoFile;
   bool _isCameraInitialized = false;
   bool _isSubmitting = false;
+  String userId = '';
 
   @override
   void initState() {
     super.initState();
     _camerasFuture = availableCameras();
+    _getUserId();
     _initializeCamera();
+  }
+
+  Future<void> _getUserId() async {
+    final user = await SharedPreferences.getInstance();
+    userId = user.getString('user')?['id'] ?? '';
   }
 
   Future<void> _initializeCamera() async {
@@ -91,7 +99,7 @@ class _FinishDeliveryState extends State<FinishDelivery> {
     });
 
     // Simulating API call
-    await OrderController.deliverOrder(widget.order.id!, _photoFile!);
+    await OrderController.deliverOrder(widget.order.id!, userId, _photoFile!);
 
     if (!mounted) {
       setState(() {

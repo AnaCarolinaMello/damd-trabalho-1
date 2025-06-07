@@ -36,48 +36,61 @@ class OrderController {
   ];
 
   static Future<List<Order>> getOrders(String userId) async {
-    return await databaseService.getOrdersByUserId(userId);
+    try {
+      final response = await ApiService.get('$path/user/$userId');
+      return response.map((order) => Order.fromJson(order)).toList();
+    } catch (e) {
+      return await databaseService.getOrdersByUserId(userId);
+    }
   }
 
-  static Future<Order?> getOrder(String id) async {
-    // try {
-    //   final response = await ApiService.get('$path/$id');
-    //   return Order.fromJson(response);
-    // } catch (e) {
-      return databaseService.getOrderById(id);
-    // }
+  static Future<Order?> getOrder(String id, String userId) async {
+    try {
+      final response = await ApiService.get('$path/$id?userId=$userId');
+      return Order.fromJson(response);
+    } catch (e) {
+      return await databaseService.getOrderById(id);
+    }
   }
 
   static Future<void> acceptOrder(String orderId, String driverId) async {
-    // try {
-    //   final response = await ApiService.post('$path/accept/$orderId', {
-    //     'driver_id': driverId,
-    //   });
-    // } catch (e) {
+    try {
+      final response = await ApiService.post('$path/accept/$orderId', {
+        'driver_id': driverId,
+      });
+    } catch (e) {
       await databaseService.assignDriverToOrder(orderId, driverId);
-    // }
+    }
   }
 
-  static Future<Order?> getAcceptOrder(String driverId) async {
-    // try {
-    //   final response = await ApiService.get('$path/accept/$driverId');
-    //   return Order.fromJson(response);
-    // } catch (e) {
+  static Future<Order?> getAcceptedOrder(String driverId) async {
+    try {
+      final response = await ApiService.get('$path/driver/$driverId');
+      return Order.fromJson(response);
+    } catch (e) {
       return await databaseService.getOrderByDriverId(driverId);
-    // }
+    }
   }
 
-  static Future<void> deliverOrder(String orderId, XFile photo) async {
-    await databaseService.finishOrder(orderId, photo);
+  static Future<void> deliverOrder(String orderId, String userId, XFile photo) async {
+    final Uint8List imageBytes = await photo.readAsBytes();
+    try {
+      final response = await ApiService.post('$path/deliver/$orderId', {
+        'photo': imageBytes,
+        'userId': userId,
+      });
+    } catch (e) {
+      await databaseService.finishOrder(orderId, imageBytes);
+    }
   }
 
   static Future<List<Order>> getAvailableOrders() async {
-    // try {
-    //   final response = await ApiService.get('$path/available');
-    //   return response.map((order) => Order.fromJson(order)).toList();
-    // } catch (e) {
-    return await databaseService.getOrdersByStatus(Status.pending);
-    // }
+    try {
+      final response = await ApiService.get('$path/available');
+      return response.map((order) => Order.fromJson(order)).toList();
+    } catch (e) {
+      return await databaseService.getOrdersByStatus(Status.pending);
+    }
   }
 
   static Future<Order> createOrder(Order order, String userId) async {
@@ -90,16 +103,30 @@ class OrderController {
       items: order.items,
       address: order.address,
     );
-    return await databaseService.createOrder(newOrder, userId);
+    try {
+      final response = await ApiService.post(path, newOrder);
+      return Order.fromJson(response);
+    } catch (e) {
+      return await databaseService.createOrder(newOrder, userId);
+    }
   }
 
-  static Future<void> rateOrder(String orderId, double rating) async {
-    await databaseService.rateOrder(orderId, rating);
+  static Future<void> rateOrder(String orderId, String userId, double rating) async {
+    try {
+      final response = await ApiService.post('$path/rate/$orderId', {
+        'userId': userId,
+        'rating': rating,
+      });
+    } catch (e) {
+      await databaseService.rateOrder(orderId, rating);
+    }
   }
 
   static Future<void> createOrders() async {
     try {
-      await ApiService.post(path, orders);
+      for (var order in orders) {
+        await ApiService.post(path, order);
+      }
     } catch (e) {
       for (var order in orders) {
         await databaseService.createOrder(order, 'e85e1f47-e907-4967-a08f-fa1018f8d80e');

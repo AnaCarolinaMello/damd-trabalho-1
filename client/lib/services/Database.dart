@@ -473,18 +473,15 @@ class DatabaseService {
     );
   }
 
-  Future<int> finishOrder(String orderId, XFile photo) async {
+  Future<int> finishOrder(String orderId, Uint8List photo) async {
     final db = await instance.database;
 
     try {
-      // Ler a imagem como bytes
-      final Uint8List imageBytes = await photo.readAsBytes();
-
       // Atualizar a ordem com os dados binários da imagem
       return db.update(
         'orders',
         {
-          'image': imageBytes, // Armazena os bytes diretamente no campo BLOB
+          'image': photo, // Armazena os bytes diretamente no campo BLOB
           'status': Status.delivered.toString().split('.').last,
         },
         where: 'id = ?',

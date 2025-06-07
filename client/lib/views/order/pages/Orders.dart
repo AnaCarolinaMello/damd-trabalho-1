@@ -19,12 +19,11 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
   late List<Order> _orders;
   late List<Order> _activeOrders;
   late List<Order> _pastOrders;
+  String userId = '';
 
   getOrders() async {
     final prefs = await SharedPreferences.getInstance();
-    print(prefs.getString('user'));
-    final userId = jsonDecode(prefs.getString('user')!)['id'];
-    print(userId);
+    userId = jsonDecode(prefs.getString('user')!)['id'];
     _orders = await OrderController.getOrders(userId);
 
     setState(() {
@@ -65,7 +64,7 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
       return;
     }
 
-    await OrderController.rateOrder(order.id!, rating);
+    await OrderController.rateOrder(order.id!, userId, rating);
     if (mounted) {
       setState(() {
         order.rating = rating;
