@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/models/OrderItem.dart';
@@ -7,15 +8,15 @@ import 'package:damd_trabalho_1/services/Database.dart';
 import 'package:damd_trabalho_1/services/Api.dart';
 
 class OrderController {
-  static final path = 'orders';
+  static final path = 'order';
   static final databaseService = DatabaseService.instance;
   static List<Order> orders = [
     Order(
       id: '4752348',
       name: 'Restaurante Do Sabor',
       description: 'Prato do dia + sobremesa',
-      date: 'Hoje',
-      time: '12:30',
+      date: DateTime.now().toIso8601String(),
+      time: DateTime.now().toIso8601String(),
       status: Status.pending,
       address: Address(
         street: 'Market Street',
@@ -32,14 +33,16 @@ class OrderController {
         OrderItem(name: 'Prato do dia', price: 25.0, quantity: 1),
         OrderItem(name: 'Sovermesa', price: 12.90, quantity: 1),
       ],
+      customerId: '391c606a-b79b-47f5-aa82-4951eb7fd06d',
     )
   ];
 
   static Future<List<Order>> getOrders(String userId) async {
     try {
       final response = await ApiService.get('$path/user/$userId');
-      return response.map((order) => Order.fromJson(order)).toList();
+      return response.map<Order>((order) => Order.fromJson(order)).toList();
     } catch (e) {
+      print('error getting orders $e');
       return await databaseService.getOrdersByUserId(userId);
     }
   }
@@ -56,7 +59,7 @@ class OrderController {
   static Future<void> acceptOrder(String orderId, String driverId) async {
     try {
       final response = await ApiService.post('$path/accept/$orderId', {
-        'driver_id': driverId,
+        'driverId': driverId,
       });
     } catch (e) {
       await databaseService.assignDriverToOrder(orderId, driverId);
@@ -87,7 +90,7 @@ class OrderController {
   static Future<List<Order>> getAvailableOrders() async {
     try {
       final response = await ApiService.get('$path/available');
-      return response.map((order) => Order.fromJson(order)).toList();
+      return response.map<Order>((order) => Order.fromJson(order)).toList();
     } catch (e) {
       return await databaseService.getOrdersByStatus(Status.pending);
     }
@@ -125,9 +128,11 @@ class OrderController {
   static Future<void> createOrders() async {
     try {
       for (var order in orders) {
-        await ApiService.post(path, order);
+        await ApiService.post(path, order.toJson());
+        print('order created');
       }
     } catch (e) {
+      print('error creating orders $e');
       for (var order in orders) {
         await databaseService.createOrder(order, 'e85e1f47-e907-4967-a08f-fa1018f8d80e');
       }

@@ -7,7 +7,7 @@ export async function query(query, params) {
 
 export async function listEntity(entity, fields = "*", where = {}) {
   const whereClause = Object.entries(where)
-    .map(([key, value]) => `${key} = ${value}`)
+    .map(([key, value]) => `${key} = ${typeof value === 'string' ? `'${value}'` : value}`)
     .join(" AND ");
   const result = await pool.query(
     `SELECT ${fields} FROM ${entity} ${

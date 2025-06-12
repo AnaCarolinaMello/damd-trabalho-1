@@ -41,7 +41,7 @@ class DatabaseService {
 
       return await openDatabase(
         path,
-        version: 3,
+        version: 4,
         onCreate: _createDB,
         onOpen: (db) {
           print("Database opened successfully at $path");

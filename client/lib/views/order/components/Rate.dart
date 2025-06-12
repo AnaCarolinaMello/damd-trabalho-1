@@ -17,6 +17,7 @@ class Rate extends StatefulWidget {
 
 class _RateState extends State<Rate> {
   double _rating = 0;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +59,16 @@ class _RateState extends State<Rate> {
           const SizedBox(height: Tokens.spacing16),
           Button(
             text: 'Enviar Avaliação',
-            onPressed: () => widget.rateOrder(_rating),
+            loading: isLoading,
+            onPressed: () async {
+              setState(() {
+                isLoading = true;
+              });
+              await widget.rateOrder(_rating);
+              setState(() {
+                isLoading = false;
+              });
+            },
           ),
         ],
       ),

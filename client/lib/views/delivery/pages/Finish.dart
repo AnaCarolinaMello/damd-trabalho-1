@@ -8,6 +8,7 @@ import 'package:damd_trabalho_1/views/delivery/components/PhotoPreview.dart';
 import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class FinishDelivery extends StatefulWidget {
   final Order order;
@@ -35,8 +36,12 @@ class _FinishDeliveryState extends State<FinishDelivery> {
   }
 
   Future<void> _getUserId() async {
-    final user = await SharedPreferences.getInstance();
-    userId = user.getString('user')?['id'] ?? '';
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString('user');
+    if (userJson != null) {
+      final user = jsonDecode(userJson);
+      userId = user['id'].toString();
+    }
   }
 
   Future<void> _initializeCamera() async {

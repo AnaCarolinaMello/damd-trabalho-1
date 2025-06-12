@@ -64,17 +64,19 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
       return;
     }
 
-    await OrderController.rateOrder(order.id!, userId, rating);
-    if (mounted) {
-      setState(() {
-        order.rating = rating;
-        final index = _pastOrders.indexOf(order);
-        _pastOrders[index] = order;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avaliação enviada com sucesso')),
-      );
-    } else {
+    try {
+      await OrderController.rateOrder(order.id!, userId, rating);
+      if (mounted) {
+        setState(() {
+          order.rating = rating;
+          final index = _pastOrders.indexOf(order);
+          _pastOrders[index] = order;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Avaliação enviada com sucesso')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Erro ao avaliar o pedido')));

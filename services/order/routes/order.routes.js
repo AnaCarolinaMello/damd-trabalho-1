@@ -24,19 +24,19 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/available", async (req, res) => {
   try {
-    const order = await getOrderById(req.params.id, req.query.userId);
-    return200(order, res);
+    const orders = await getAvailableOrders();
+    return200(orders, res);
   } catch (error) {
     return500(error, req, res);
   }
 });
 
-router.get("/available", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const orders = await getAvailableOrders();
-    return200(orders, res);
+    const order = await getOrderById(req.params.id, req.query.userId);
+    return200(order, res);
   } catch (error) {
     return500(error, req, res);
   }
