@@ -98,7 +98,7 @@ class _DeliveryCardState extends State<DeliveryCard> {
                       ),
                       const SizedBox(height: Tokens.spacing4),
                       Text(
-                        '${widget.order!.date} ${widget.order!.time}',
+                        '${DateTime.tryParse(widget.order!.date)?.day ?? 0}/${DateTime.tryParse(widget.order!.date)?.month ?? 0}/${DateTime.tryParse(widget.order!.date)?.year ?? 0} ${widget.order!.time.split(':')[0]}:${widget.order!.time.split(':')[1]}',
                         style: TextStyle(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontSize: Tokens.fontSize14,

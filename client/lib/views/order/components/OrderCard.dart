@@ -12,7 +12,13 @@ class OrderCard extends StatelessWidget {
   final Function(Order) orderAgain;
   final Function(Order, double) rateOrder;
 
-  const OrderCard({super.key, required this.order, required this.isActive, required this.orderAgain, required this.rateOrder});
+  const OrderCard({
+    super.key,
+    required this.order,
+    required this.isActive,
+    required this.orderAgain,
+    required this.rateOrder,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +85,7 @@ class OrderCard extends StatelessWidget {
                           ),
                           const Spacer(),
                           Text(
-                            '${order.date} ${order.time}',
+                            '${DateTime.tryParse(order.date)?.day ?? 0}/${DateTime.tryParse(order.date)?.month ?? 0}/${DateTime.tryParse(order.date)?.year ?? 0} ${order.time.split(':')[0]}:${order.time.split(':')[1]}',
                             style: TextStyle(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontSize: Tokens.fontSize14,
@@ -105,7 +111,12 @@ class OrderCard extends StatelessWidget {
           ),
 
           // Botões de ação
-          OrderActions(order: order, isActive: isActive, orderAgain: () => orderAgain(order), rateOrder: rateOrder),
+          OrderActions(
+            order: order,
+            isActive: isActive,
+            orderAgain: () => orderAgain(order),
+            rateOrder: rateOrder,
+          ),
         ],
       ),
     );

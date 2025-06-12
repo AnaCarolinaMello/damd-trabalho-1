@@ -18,6 +18,7 @@ class Order {
   final double discount;
   final Address address;
   final String? driverId;
+  final String? customerId;
 
   Order({
     this.id,
@@ -33,10 +34,52 @@ class Order {
     this.deliveryFee = 0.0,
     this.discount = 0.0,
     this.driverId,
+    this.customerId,
   });
 
   double get price => items.fold(0.0, (sum, item) => sum + item.price * item.quantity);
   double get total => price + deliveryFee - discount;
+
+  static Uint8List? _convertToUint8List(dynamic imageData) {
+    if (imageData == null) return null;
+    
+    try {
+      if (imageData is Map && imageData['data'] != null) {
+        final bufferData = imageData['data'];
+        if (bufferData is List) {
+          // Convert ASCII bytes to string
+          final jsonString = String.fromCharCodes(List<int>.from(bufferData));
+          
+          // Fix malformed JSON: {"255","216",...} -> ["255","216",...]
+          final fixedJson = jsonString.replaceFirst('{', '[').replaceFirst(RegExp(r'}$'), ']');
+          
+          final decoded = jsonDecode(fixedJson);
+          if (decoded is List) {
+            return Uint8List.fromList(decoded.map<int>((e) => int.parse(e.toString())).toList());
+          }
+        }
+      } else if (imageData is String) {
+        try {
+          return base64Decode(imageData);
+        } catch (e) {
+          // Try fixing malformed JSON format
+          final fixedJson = imageData.replaceFirst('{', '[').replaceFirst(RegExp(r'}$'), ']');
+          final decoded = jsonDecode(fixedJson);
+          if (decoded is List) {
+            return Uint8List.fromList(decoded.map<int>((e) => int.parse(e.toString())).toList());
+          }
+        }
+      } else if (imageData is List) {
+        return Uint8List.fromList(List<int>.from(imageData));
+      }
+    } catch (e) {
+      print('Error converting image data: $e');
+      // Silently fail - images are optional
+      return null;
+    }
+    
+    return null;
+  }
 
   factory Order.fromJson(Map<String, dynamic> json) {
     var itemsList = json['items'] ?? [];
@@ -56,17 +99,36 @@ class Order {
 
     return Order(
       id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      date: json['date'],
-      time: json['time'],
-      status: Status.values.byName(json['status']),
-      image: json['image'] ?? Uint8List.fromList([]),
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      date: json['date'] ?? '',
+      time: json['time'] ?? '',
+      status: Status.values.byName(json['status'] ?? 'pending'),
+      image: _convertToUint8List(json['image']),
       address: Address.fromJson(address),
       items: orderItems,
-      deliveryFee: json['delivery_fee'],
-      discount: json['discount'],
-      driverId: json['driver_id'],
+      deliveryFee: double.tryParse(json['delivery_fee']?.toString() ?? '0') ?? 0.0,
+      discount: double.tryParse(json['discount']?.toString() ?? '0') ?? 0.0,
+      rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
+      driverId: json['driver_id'] ?? '',
+      customerId: json['customer_id'] ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'description': description,
+      'date': date,
+      'time': time,
+      'status': status.name,
+      'image': image,
+      'address': address.toJson(),
+      'items': items.map((item) => item.toJson()).toList(),
+      'delivery_fee': deliveryFee,
+      'discount': discount,
+      'driver_id': driverId,
+      'customer_id': customerId,
+    };
   }
 }

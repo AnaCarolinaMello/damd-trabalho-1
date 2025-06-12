@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  static final String baseUrl = '${String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:8080')}/api';
+  static final String baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:8080');
 
   // GET request
   static Future<dynamic> get(String endpoint) async {

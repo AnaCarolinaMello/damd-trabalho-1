@@ -77,7 +77,7 @@ class _OrderDetailState extends State<OrderDetail> {
                   Status(order: order!, isActive: widget.isActive),
                   const SizedBox(height: Tokens.spacing4),
                   Text(
-                    '${order!.date} ${order!.time}',
+                    '${DateTime.tryParse(order!.date)?.day ?? 0}/${DateTime.tryParse(order!.date)?.month ?? 0}/${DateTime.tryParse(order!.date)?.year ?? 0} ${order!.time.split(':')[0]}:${order!.time.split(':')[1]}',
                     style: TextStyle(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: Tokens.fontSize14,
@@ -98,7 +98,24 @@ class _OrderDetailState extends State<OrderDetail> {
             const Divider(),
             
             if (widget.order.image != null && widget.order.image!.isNotEmpty) ...[
-              Image.memory(widget.order.image!),
+              Image.memory(
+                widget.order.image!,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  );
+                },
+              ),
               const Divider(),
             ],
 
@@ -163,11 +180,11 @@ class _OrderDetailState extends State<OrderDetail> {
               const SizedBox(height: Tokens.spacing16),
               if (order!.rating == 0)
                 Rate(
-                  rateOrder: (rating) => {
-                    widget.rateOrder(order!, rating),
+                  rateOrder: (rating) async {
+                    await widget.rateOrder(order!, rating);
                     setState(() {
                       order!.rating = rating;
-                    }),
+                    });
                   },
                 )
               else
