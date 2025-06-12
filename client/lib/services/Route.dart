@@ -9,7 +9,7 @@ import 'package:google_maps_polyline/src/point_latlng.dart';
 import 'package:google_maps_polyline/src/utils/my_request_enums.dart';
 
 class RouteService {
-  static const String apiKey = "AIzaSyCZRRowIrbdA6FreTT6g9tv9PehQ4K2KBU";
+  static const String apiKey = "<YOUR_API_KEY>";
   static final Map<String, List<LatLng>> _routeCache = {};
   static final Map<String, String> _gpxPathCache = {};
   static final GoogleMapsPolyline _polyline = GoogleMapsPolyline();
