@@ -1,5 +1,5 @@
-const db = require('../db');
-const { v4: uuidv4 } = require('uuid');
+import { addEntity, getEntity } from '../util/index.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const registerUser = async (req, res) => {
   const { name, email, password, type } = req.body;
@@ -8,36 +8,26 @@ const registerUser = async (req, res) => {
     return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
   }
 
+  // ver se email ja existe
   try {
-    // Verifica se o e-mail já existe
-    const existingUser = await new Promise((resolve, reject) => {
-      db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
-
+    const existingUser = await getEntity(null, 'users', '*', { email });
     if (existingUser) {
       return res.status(409).json({ message: 'E-mail já cadastrado.' });
     }
 
-    const id = uuidv4();
-    await new Promise((resolve, reject) => {
-      db.run(
-        'INSERT INTO users (id, name, email, password, type) VALUES (?, ?, ?, ?, ?)',
-        [id, name, email, password, type],
-        function (err) {
-          if (err) reject(err);
-          else resolve();
-        }
-      );
-    });
+    const user = await addEntity({
+      id: uuidv4(),
+      name,
+      email,
+      password,
+      type,
+    }, 'users');
 
-    res.status(201).json({ message: 'Usuário cadastrado com sucesso.', id });
+    return res.status(201).json({ message: 'Usuário cadastrado com sucesso.', id: user.id });
   } catch (error) {
-    console.error('Erro no registro:', error);
-    res.status(500).json({ message: 'Erro interno do servidor.' });
+    console.error(error);
+    return res.status(500).json({ message: 'Erro interno do servidor.' });
   }
 };
 
-module.exports = { registerUser };
+export { registerUser };
