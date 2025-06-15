@@ -3,7 +3,7 @@ import 'package:damd_trabalho_1/services/Database.dart';
 import 'package:damd_trabalho_1/models/User.dart';
 
 class UserController {
-  static final path = 'users';
+  static final path = 'auth';
   static final databaseService = DatabaseService.instance;
 
   static Future<List<User>> getUsers() async {
@@ -11,33 +11,37 @@ class UserController {
   }
 
   static Future<User?> getUser(String email, String password) async {
-  //   try {
-  //     return await ApiService.post(path + '/login', {
-  //       'email': email,
-  //       'password': password,
-  //     });
-  //   } catch (e) {
+    try {
+      final response = await ApiService.post('$path/login', {
+        'email': email,
+        'password': password,
+      });
+      print('response: $response');
+      return User.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      print('error  getUser: $e');
       return await databaseService.login(email, password);
-    // }
+    }
   }
 
-  static Future<User?> getUserById(String id) async {
+  static Future<User?> getUserById(int id) async {
     return await databaseService.getUser(id);
   }
 
-  static Future createUser(User user) async {
-    // try {
-    //   await ApiService.post(path, user);
-    // } catch (e) {
-      await databaseService.createUser(user);
-    // }
+  static Future<User?> createUser(User user) async {
+    try {
+      final response = await ApiService.post(path, user);
+      return User.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      return await databaseService.createUser(user);
+    }
   }
 
   static Future updateUser(User user) async {
-    // try {
-    //   await ApiService.put(path + '/' + user.id!, user);
-    // } catch (e) {
+    try {
+      await ApiService.put('$path/${user.id!}', user);
+    } catch (e) {
       await databaseService.updateUser(user);
-    // }
+    }
   }
 }

@@ -6,7 +6,7 @@ class DriverController {
   static final databaseService = DatabaseService.instance;
 
 
-  static Future<Driver?> getDriver(String id) async {
+  static Future<Driver?> getDriver(int id) async {
     return await databaseService.getDriver(id);
   }
 }

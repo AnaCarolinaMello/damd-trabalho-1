@@ -46,7 +46,7 @@ class _RegisterActionState extends State<RegisterAction> {
 
       // Save user data to SharedPreferences as JSON string
       SharedPreferences.getInstance().then((prefs) {
-        final userJson = jsonEncode(createdUser.toJson());
+        final userJson = jsonEncode(createdUser!.toJson());
         prefs.setString('user', userJson);
       });
 

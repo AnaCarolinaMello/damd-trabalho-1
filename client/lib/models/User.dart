@@ -1,27 +1,26 @@
 import 'package:damd_trabalho_1/models/enum/UserType.dart';
 
 class User {
-  final String? id;
+  final int? id;
   final UserType type;
   final String name;
   final String email;
-  final String password;
+  final String? password;
   
   User({
     this.id,
     required this.type,
     required this.name,
     required this.email,
-    required this.password,
+    this.password,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
+      id: json['id'] as int?,
       type: _getUserTypeFromString(json['type']),
       name: json['name'],
       email: json['email'],
-      password: json['password'],
     );
   }
 
@@ -31,7 +30,7 @@ class User {
       'type': type.toString().split('.').last, // Convert enum to string
       'name': name,
       'email': email,
-      'password': password,
+      'password': password ?? '',
     };
   }
   

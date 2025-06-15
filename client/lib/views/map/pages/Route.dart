@@ -228,7 +228,7 @@ class _RouteState extends State<RoutePage> {
         _gpxFilePath = await RouteService.getOrCreateGpxFile(
           position,
           _destination,
-          widget.order.id ?? 'route-${DateTime.now().millisecondsSinceEpoch}',
+          widget.order.id?.toString() ?? 'route-${DateTime.now().millisecondsSinceEpoch}',
         );
       }
     } catch (e) {
@@ -275,7 +275,7 @@ class _RouteState extends State<RoutePage> {
       _gpxFilePath = await RouteService.getOrCreateGpxFile(
         _location,
         _destination,
-        widget.order.id ?? 'route',
+        widget.order.id?.toString() ?? 'route',
       );
     } catch (e) {
       print('Error setting up route simulation: $e');

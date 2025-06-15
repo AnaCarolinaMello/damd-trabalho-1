@@ -19,11 +19,11 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
   late List<Order> _orders;
   late List<Order> _activeOrders;
   late List<Order> _pastOrders;
-  String userId = '';
+  int userId = 0;
 
   getOrders() async {
     final prefs = await SharedPreferences.getInstance();
-    userId = jsonDecode(prefs.getString('user')!)['id'];
+    userId = jsonDecode(prefs.getString('user')!)['id'] as int;
     _orders = await OrderController.getOrders(userId);
 
     setState(() {
@@ -37,7 +37,7 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
 
   void orderAgain(Order order) async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = jsonDecode(prefs.getString('user')!)['id'];
+    final userId = jsonDecode(prefs.getString('user')!)['id'] as int;
     final newOrder = await OrderController.createOrder(order, userId);
 
     setState(() {

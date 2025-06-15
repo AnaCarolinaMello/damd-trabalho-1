@@ -12,7 +12,6 @@ class OrderController {
   static final databaseService = DatabaseService.instance;
   static List<Order> orders = [
     Order(
-      id: '4752348',
       name: 'Restaurante Do Sabor',
       description: 'Prato do dia + sobremesa',
       date: DateTime.now().toIso8601String(),
@@ -33,11 +32,11 @@ class OrderController {
         OrderItem(name: 'Prato do dia', price: 25.0, quantity: 1),
         OrderItem(name: 'Sovermesa', price: 12.90, quantity: 1),
       ],
-      customerId: '391c606a-b79b-47f5-aa82-4951eb7fd06d',
+      customerId: 1,
     )
   ];
 
-  static Future<List<Order>> getOrders(String userId) async {
+  static Future<List<Order>> getOrders(int userId) async {
     try {
       final response = await ApiService.get('$path/user/$userId');
       return response.map<Order>((order) => Order.fromJson(order)).toList();
@@ -47,7 +46,7 @@ class OrderController {
     }
   }
 
-  static Future<Order?> getOrder(String id, String userId) async {
+  static Future<Order?> getOrder(int id, int userId) async {
     try {
       final response = await ApiService.get('$path/$id?userId=$userId');
       return Order.fromJson(response);
@@ -56,7 +55,7 @@ class OrderController {
     }
   }
 
-  static Future<void> acceptOrder(String orderId, String driverId) async {
+  static Future<void> acceptOrder(int orderId, int driverId) async {
     try {
       final response = await ApiService.post('$path/accept/$orderId', {
         'driverId': driverId,
@@ -66,7 +65,7 @@ class OrderController {
     }
   }
 
-  static Future<Order?> getAcceptedOrder(String driverId) async {
+  static Future<Order?> getAcceptedOrder(int driverId) async {
     try {
       final response = await ApiService.get('$path/driver/$driverId');
       return Order.fromJson(response);
@@ -75,14 +74,15 @@ class OrderController {
     }
   }
 
-  static Future<void> deliverOrder(String orderId, String userId, XFile photo) async {
+  static Future<void> deliverOrder(int orderId, int userId, XFile photo) async {
     final Uint8List imageBytes = await photo.readAsBytes();
     try {
-      final response = await ApiService.post('$path/deliver/$orderId', {
+      await ApiService.post('$path/deliver/$orderId', {
         'photo': imageBytes,
         'userId': userId,
       });
     } catch (e) {
+      print('error delivering order: $e and orderId: $orderId and userId: $userId');
       await databaseService.finishOrder(orderId, imageBytes);
     }
   }
@@ -96,7 +96,7 @@ class OrderController {
     }
   }
 
-  static Future<Order> createOrder(Order order, String userId) async {
+  static Future<Order> createOrder(Order order, int userId) async {
     final newOrder = Order(
       name: order.name,
       description: order.description,
@@ -105,6 +105,7 @@ class OrderController {
       status: Status.pending,
       items: order.items,
       address: order.address,
+      customerId: userId,
     );
     try {
       final response = await ApiService.post(path, newOrder);
@@ -114,7 +115,7 @@ class OrderController {
     }
   }
 
-  static Future<void> rateOrder(String orderId, String userId, double rating) async {
+  static Future<void> rateOrder(int orderId, int userId, double rating) async {
     try {
       final response = await ApiService.post('$path/rate/$orderId', {
         'userId': userId,
@@ -134,7 +135,7 @@ class OrderController {
     } catch (e) {
       print('error creating orders $e');
       for (var order in orders) {
-        await databaseService.createOrder(order, 'e85e1f47-e907-4967-a08f-fa1018f8d80e');
+        await databaseService.createOrder(order, 1);
       }
     }
   }

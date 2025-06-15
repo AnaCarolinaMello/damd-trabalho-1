@@ -25,7 +25,7 @@ class _FinishDeliveryState extends State<FinishDelivery> {
   XFile? _photoFile;
   bool _isCameraInitialized = false;
   bool _isSubmitting = false;
-  String userId = '';
+  int userId = 0;
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _FinishDeliveryState extends State<FinishDelivery> {
     final userJson = prefs.getString('user');
     if (userJson != null) {
       final user = jsonDecode(userJson);
-      userId = user['id'].toString();
+      userId = user['id'] as int;
     }
   }
 
@@ -104,45 +104,40 @@ class _FinishDeliveryState extends State<FinishDelivery> {
     });
 
     // Simulating API call
-    await OrderController.deliverOrder(widget.order.id!, userId, _photoFile!);
-
-    if (!mounted) {
-      setState(() {
-        _isSubmitting = false;
-      });
+    try {
+      await OrderController.deliverOrder(widget.order.id!, userId, _photoFile!);
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Entrega concluída'),
+            content: Text(
+              'O pedido #${widget.order.id} foi entregue com sucesso.',
+            ),
+            actions: [
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Fecha o dialog
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MainScreen()),
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erro ao entregar o pedido')),
       );
-      return;
     }
 
-    showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Entrega concluída'),
-        content: Text('O pedido #${widget.order.id} foi entregue com sucesso.'),
-        actions: [
-          TextButton(
-            child: const Text('OK'),
-            onPressed: () {
-              Navigator.of(context).pop(); // Fecha o dialog
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const MainScreen()),
-              );
-            },
-          ),
-        ],
-      );
-    },
-  );
-
-    // Return to the previous screen with success message
-    // Navigator.push(
-      // context,
-     //  MaterialPageRoute(builder: (context) => const MainScreen()),
-    // );
+    setState(() {
+      _isSubmitting = false;
+    });
   }
 
   @override
