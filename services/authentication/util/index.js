@@ -7,17 +7,11 @@ export async function query(query, params) {
 
 export async function getEntity(id, entity, fields = "*", where = {}) {
   const whereClause = Object.entries(where)
-    .map(
-      ([key, value]) =>
-        `${key} = ${typeof value === "string" ? `'${value}'` : value}`
-    )
+    .map(([key, value]) => `${key} = ${value}`)
     .join(" AND ");
-
   const result = await pool.query(
-    `SELECT ${fields} FROM ${entity} WHERE ${whereClause || "1=1"} ${
-      id ? "AND id = $1" : ""
-    }`,
-    id ? [id] : []
+    `SELECT ${fields} FROM ${entity} WHERE id = $1 ${whereClause ? `AND ${whereClause}` : ""}`,
+    [id]
   );
   return result.rows[0];
 }

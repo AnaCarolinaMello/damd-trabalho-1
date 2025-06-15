@@ -6,7 +6,7 @@ import {
   unregisterFromGateway,
 } from "./controllers/registry.controller.js";
 import orderRoutes from "./routes/order.routes.js";
-import { return200 } from "../../api/util/index.js";
+import { return200 } from "./util/index.js";
 
 const app = express();
 
@@ -24,7 +24,7 @@ app.use(express.json());
 
 // Health check endpoint
 app.get("/health", (_, res) => {
-  return200(res, "healthy");
+  return return200("healthy", res);
 });
 
 app.use("/", orderRoutes);

@@ -1,5 +1,5 @@
 class Address {
-  final String? id;
+  final int? id;
   final String street;
   final String number;
   final String complement;
@@ -27,7 +27,7 @@ class Address {
 
   static Address fromJson(Map<String, dynamic> json) {
     return Address(
-      id: json['id'],
+      id: json['id'] as int?,
       street: json['street'] ?? '',
       number: json['number'] ?? '',
       complement: json['complement'] ?? '',

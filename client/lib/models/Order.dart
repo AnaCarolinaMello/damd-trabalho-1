@@ -5,7 +5,7 @@ import 'package:damd_trabalho_1/models/Address.dart';
 import 'package:damd_trabalho_1/models/enum/Status.dart';
 
 class Order {
-  final String? id;
+  final int? id;
   final String name;
   final String description;
   String date;
@@ -17,8 +17,8 @@ class Order {
   final double deliveryFee;
   final double discount;
   final Address address;
-  final String? driverId;
-  final String? customerId;
+  final int? driverId;
+  final int? customerId;
 
   Order({
     this.id,
@@ -98,7 +98,7 @@ class Order {
     }
 
     return Order(
-      id: json['id'],
+      id: json['id'] as int?,
       name: json['name'] ?? '',
       description: json['description'] ?? '',
       date: json['date'] ?? '',
@@ -110,8 +110,8 @@ class Order {
       deliveryFee: double.tryParse(json['delivery_fee']?.toString() ?? '0') ?? 0.0,
       discount: double.tryParse(json['discount']?.toString() ?? '0') ?? 0.0,
       rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
-      driverId: json['driver_id'] ?? '',
-      customerId: json['customer_id'] ?? '',
+      driverId: json['driver_id'] as int?,
+      customerId: json['customer_id'] as int?,
     );
   }
 

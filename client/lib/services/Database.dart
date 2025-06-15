@@ -10,7 +10,6 @@ import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/models/OrderItem.dart';
 import 'package:damd_trabalho_1/models/enum/UserType.dart';
 import 'package:damd_trabalho_1/models/enum/Status.dart';
-import 'package:uuid/uuid.dart';
 import 'package:damd_trabalho_1/database/schema.dart';
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
@@ -18,7 +17,6 @@ import 'package:path_provider/path_provider.dart';
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
   static Database? _database;
-  final _uuid = Uuid();
 
   DatabaseService._init();
 
@@ -41,7 +39,7 @@ class DatabaseService {
 
       return await openDatabase(
         path,
-        version: 4,
+        version: 5,
         onCreate: _createDB,
         onOpen: (db) {
           print("Database opened successfully at $path");
@@ -55,7 +53,7 @@ class DatabaseService {
       print("Critical database initialization error: $e");
       return await openDatabase(
         inMemoryDatabasePath,
-        version: 1,
+        version: 5,
         onCreate: _createDB,
       );
     }
@@ -86,13 +84,10 @@ class DatabaseService {
   }
 
   // User operations
-  Future<String> createUser(User user) async {
+  Future<User> createUser(User user) async {
     try {
       final db = await instance.database;
-      final id = _uuid.v4();
-
       final userData = user.toJson();
-      userData['id'] = id;
 
       print("Creating user with data: $userData");
 
@@ -102,7 +97,7 @@ class DatabaseService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
-      return id;
+      return User.fromJson(userData);
     } catch (e) {
       print("Error creating user: $e");
       rethrow;
@@ -115,7 +110,7 @@ class DatabaseService {
     return maps.map((map) => User.fromJson(map)).toList();
   }
 
-  Future<User?> getUser(String id) async {
+  Future<User?> getUser(int id) async {
     final db = await instance.database;
     final maps = await db.query('users', where: 'id = ?', whereArgs: [id]);
 
@@ -177,13 +172,13 @@ class DatabaseService {
     );
   }
 
-  Future<int> deleteUser(String id) async {
+  Future<int> deleteUser(int id) async {
     final db = await instance.database;
     return await db.delete('users', where: 'id = ?', whereArgs: [id]);
   }
 
   // Driver operations
-  Future<Driver?> getDriver(String id) async {
+  Future<Driver?> getDriver(int id) async {
     final db = await instance.database;
     final maps = await db.rawQuery('''
       SELECT u.*,
@@ -202,12 +197,10 @@ class DatabaseService {
   }
 
   // Address operations
-  Future<String> createAddress(Address address) async {
+  Future<int> createAddress(Address address) async {
     final db = await instance.database;
-    final id = _uuid.v4();
 
-    await db.insert('addresses', {
-      'id': id,
+    final id = await db.insert('addresses', {
       'street': address.street,
       'number': address.number,
       'complement': address.complement,
@@ -222,13 +215,11 @@ class DatabaseService {
   }
 
   // Order operations
-  Future<Order> createOrder(Order order, String customerId) async {
+  Future<Order> createOrder(Order order, int customerId) async {
     final db = await instance.database;
-    final orderId = _uuid.v4();
-    final String addressId = await createAddress(order.address);
+    final int addressId = await createAddress(order.address);
 
-    await db.insert('orders', {
-      'id': orderId,
+    final int orderId = await db.insert('orders', {
       'customer_id': customerId,
       'name': order.name,
       'description': order.description,
@@ -244,7 +235,6 @@ class DatabaseService {
     // Insert order items
     for (var item in order.items) {
       await db.insert('order_items', {
-        'id': _uuid.v4(),
         'order_id': orderId,
         'name': item.name,
         'description': item.description,
@@ -270,7 +260,7 @@ class DatabaseService {
 
     // Para cada ordem, buscar seus itens e endereço associado
     for (var orderMap in orderMaps) {
-      final String orderId = orderMap['id'] as String;
+      final int orderId = orderMap['id'] as int;
 
       // Buscar os itens da ordem
       final orderItems = await db.query(
@@ -303,7 +293,7 @@ class DatabaseService {
     return orders;
   }
 
-  Future<List<Order>> getOrdersByUserId(String userId) async {
+  Future<List<Order>> getOrdersByUserId(int userId) async {
     final db = await instance.database;
 
     final orderMaps = await db.rawQuery(
@@ -320,7 +310,7 @@ class DatabaseService {
     List<Order> orders = [];
 
     for (var orderMap in orderMaps) {
-      final String orderId = orderMap['id'] as String;
+      final int orderId = orderMap['id'] as int;
 
       // Get order items
       final itemMaps = await db.query(
@@ -367,7 +357,7 @@ class DatabaseService {
           discount: orderMap['discount'] as double? ?? 0.0,
           address: address,
           items: items,
-          driverId: orderMap['driver_id'] as String?,
+          driverId: orderMap['driver_id'] as int?,
         ),
       );
     }
@@ -375,7 +365,7 @@ class DatabaseService {
     return orders;
   }
 
-  Future<Order?> getOrderById(String orderId) async {
+  Future<Order?> getOrderById(int orderId) async {
     final db = await instance.database;
 
     final orderMaps = await db.rawQuery(
@@ -432,7 +422,7 @@ class DatabaseService {
     return Order.fromJson(completeOrderMap);
   }
 
-  Future<Order?> getOrderByDriverId(String driverId) async {
+  Future<Order?> getOrderByDriverId(int driverId) async {
     final db = await instance.database;
 
     final List<Map<String, dynamic>> orderMaps = await db.rawQuery(
@@ -463,7 +453,7 @@ class DatabaseService {
     return Order.fromJson(orderMaps.first);
   }
 
-  Future<int> updateOrderStatus(String orderId, Status status) async {
+  Future<int> updateOrderStatus(int orderId, Status status) async {
     final db = await instance.database;
     return db.update(
       'orders',
@@ -473,7 +463,7 @@ class DatabaseService {
     );
   }
 
-  Future<int> finishOrder(String orderId, Uint8List photo) async {
+  Future<int> finishOrder(int orderId, Uint8List photo) async {
     final db = await instance.database;
 
     try {
@@ -493,7 +483,7 @@ class DatabaseService {
     }
   }
 
-  Future<int> assignDriverToOrder(String orderId, String driverId) async {
+  Future<int> assignDriverToOrder(int orderId, int driverId) async {
     final db = await instance.database;
     return db.update(
       'orders',
@@ -506,7 +496,7 @@ class DatabaseService {
     );
   }
 
-  Future<int> rateOrder(String orderId, double rating) async {
+  Future<int> rateOrder(int orderId, double rating) async {
     final db = await instance.database;
     return db.update(
       'orders',

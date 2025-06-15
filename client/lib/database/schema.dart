@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS users;
 
 -- Create users table
 CREATE TABLE users (
-  id TEXT PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   type TEXT CHECK( type IN ('driver','customer') )   NOT NULL DEFAULT 'customer',
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE users (
 
 -- Create addresses table
 CREATE TABLE addresses (
-  id TEXT PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   street TEXT NOT NULL,
   number TEXT NOT NULL,
   complement TEXT,
@@ -31,9 +31,9 @@ CREATE TABLE addresses (
 
 -- Create orders table
 CREATE TABLE orders (
-  id TEXT PRIMARY KEY,
-  customer_id TEXT NOT NULL,
-  driver_id TEXT,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id INTEGER NOT NULL,
+  driver_id INTEGER,
   name TEXT NOT NULL,
   description TEXT,
   date TEXT NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE orders (
   is_rated INTEGER DEFAULT 0,
   delivery_fee REAL DEFAULT 0.0,
   discount REAL DEFAULT 0.0,
-  address_id TEXT NOT NULL,
+  address_id INTEGER NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (customer_id) REFERENCES users (id),
   FOREIGN KEY (driver_id) REFERENCES users (id),
@@ -53,8 +53,8 @@ CREATE TABLE orders (
 
 -- Create order_items table
 CREATE TABLE order_items (
-  id TEXT PRIMARY KEY,
-  order_id TEXT NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  order_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
   price REAL NOT NULL,

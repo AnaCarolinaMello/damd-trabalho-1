@@ -1,5 +1,7 @@
+import 'package:damd_trabalho_1/models/enum/Status.dart';
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
+import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/models/OrderStep.dart';
 import 'package:damd_trabalho_1/views/order/components/Track.dart';
 import 'package:damd_trabalho_1/views/order/components/TrackActions.dart';
@@ -60,44 +62,46 @@ class OrderTracking extends StatelessWidget {
         subtitle: 'Recebemos seu pedido',
         icon: Icons.receipt_long,
         isCompleted: true,
-        time: '12:30',
+        time: '${order.time.split(':')[0]}:${order.time.split(':')[1]}',
       ),
       OrderStep(
         title: 'Pedido Confirmado',
         subtitle: 'Seu pedido foi confirmado',
         icon: Icons.check_circle,
         isCompleted: true,
-        time: '12:35',
+        time: '${order.time.split(':')[0]}:${order.time.split(':')[1]}',
       ),
       OrderStep(
         title: 'Pedido em Preparação',
         subtitle: 'Estamos preparando seu pedido',
         icon: Icons.restaurant,
-        isCompleted: order.status != 'Pedido recebido',
-        time: '12:40',
+        isCompleted: true,
+        time: '${order.time.split(':')[0]}:${order.time.split(':')[1]}',
       ),
       OrderStep(
         title: 'Pronto para Entrega',
         subtitle: 'Seu pedido está pronto',
         icon: Icons.inventory_2,
         isCompleted:
-            order.status == 'Saiu para entrega' || order.status == 'Entregue',
-        time: '12:50',
+            order.status == Status.pending ||
+            order.status == Status.accepted ||
+            order.status == Status.delivered,
+        time: '${order.time.split(':')[0]}:${order.time.split(':')[1]}',
       ),
       OrderStep(
         title: 'Saiu para Entrega',
         subtitle: 'Seu pedido está a caminho',
         icon: Icons.delivery_dining,
         isCompleted:
-            order.status == 'Saiu para entrega' || order.status == 'Entregue',
-        time: '13:00',
+            order.status == Status.accepted || order.status == Status.delivered,
+        time: '${order.time.split(':')[0]}:${order.time.split(':')[1]}',
       ),
       OrderStep(
         title: 'Entregue',
         subtitle: 'Seu pedido foi entregue',
         icon: Icons.check_circle,
-        isCompleted: order.status == 'Entregue',
-        time: '13:15',
+        isCompleted: order.status == Status.delivered,
+        time: '${order.time.split(':')[0]}:${order.time.split(':')[1]}',
       ),
     ];
   }

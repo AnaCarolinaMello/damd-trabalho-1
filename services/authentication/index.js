@@ -1,13 +1,27 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js";
+import { return200 } from "./util/index.js";
 import { registerWithGateway, unregisterFromGateway } from "./controllers/registry.controller.js";
 
 const app = express();
-app.use(cors());
+
+dotenv.config();
+
+const gatewayUrl = process.env.GATEWAY_URL;
+
+app.use(cors({
+  origin: gatewayUrl
+}));
+
 app.use(express.json());
 
-app.use('/auth', authRoutes);
+app.get("/health", (_, res) => {
+  return return200("healthy", res);
+});
+
+app.use('/', authRoutes);
 
 const PORT = process.env.PORT;
 

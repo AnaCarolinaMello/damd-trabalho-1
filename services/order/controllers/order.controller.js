@@ -1,5 +1,4 @@
 import {
-  listEntity,
   getEntity,
   addEntity,
   updateEntity,

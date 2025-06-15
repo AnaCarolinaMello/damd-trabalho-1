@@ -1,19 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:damd_trabalho_1/models/Driver.dart' as DriverModel;
 import 'package:flutter/material.dart';
-import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/views/map/components/Driver.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/controllers/driver.dart';
-import 'package:google_maps_polyline/google_maps_polyline.dart';
-import 'package:google_maps_polyline/src/point_latlng.dart';
-import 'package:google_maps_polyline/src/utils/my_request_enums.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'package:damd_trabalho_1/services/Route.dart';
 
 class Tracking extends StatefulWidget {
@@ -195,7 +189,7 @@ class _TrackingState extends State<Tracking> {
       _gpxFilePath = await RouteService.getOrCreateGpxFile(
         _location,
         _destination,
-        widget.order.id ?? 'route',
+        widget.order.id?.toString() ?? 'route',
       );
 
       // Get route points for polyline
