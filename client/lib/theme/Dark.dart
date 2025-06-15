@@ -101,7 +101,7 @@ final ThemeData dark = ThemeData(
       ),
     ),
   ),
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     color: Tokens.neutral800,
     elevation: 2,
     shape: RoundedRectangleBorder(
