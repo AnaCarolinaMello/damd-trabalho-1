@@ -22,3 +22,24 @@ export function return500(response, req, res) {
 export function return403(res) {
   res.status(403).send("Unauthorized");
 }
+
+export function return404(res, message) {
+  res.status(404).send({
+    error: "Not Found",
+    message: message || "Resource not found",
+  });
+}
+
+export function return503(res, message) {
+  res.status(503).send({
+    error: "Service Unavailable",
+    message: message || "Service unavailable",
+  });
+}
+
+export function return400(res, message) {
+  res.status(400).send({ 
+    error: "Bad Request", 
+    message: message || "Invalid request parameters" 
+  });
+}
