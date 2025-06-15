@@ -8,6 +8,8 @@ import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:damd_trabalho_1/controllers/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
+import 'package:damd_trabalho_1/views/register/pages/Index.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -30,8 +32,9 @@ class _LoginPageState extends State<LoginPage> {
       _emailController.text,
       _passwordController.text,
     );
+    print(user?.toJson());
 
-    //await OrderController.createOrders();
+    // await OrderController.createOrders();
 
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('user', jsonEncode(user?.toJson()));
@@ -140,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const RegisterPage(),
+                              builder: (context) => const UserTypePage(),
                             ),
                           );
                         },
@@ -173,19 +176,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class RegisterPage extends StatelessWidget {
-  const RegisterPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Placeholder for register page
-    return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
-      body: const Center(child: Text('Register page coming soon')),
     );
   }
 }

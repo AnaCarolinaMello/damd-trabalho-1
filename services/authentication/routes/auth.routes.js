@@ -1,7 +1,15 @@
-const express = require('express');
+import express from "express";
+import { registerUser } from "../controllers/auth.controller.js";
+import { return200, return500 } from "../util/index.js";
 const router = express.Router();
-const { registerUser } = require('../controllers/auth.controller');
 
-router.post('/register', registerUser);
+router.post("/", async (req, res) => {
+    try {
+        const response = await registerUser(req.body);
+        return return200(response, res);
+    } catch (error) {
+        return return500(error, req, res);
+    }
+});
 
-module.exports = router;
+export default router;

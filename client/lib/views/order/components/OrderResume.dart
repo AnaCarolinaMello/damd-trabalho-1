@@ -22,11 +22,26 @@ class OrderResume extends StatelessWidget {
         color: theme.colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(Tokens.radius12),
       ),
-      child: Icon(
-        Icons.restaurant,
-        size: Tokens.fontSize40,
-        color: theme.colorScheme.primary,
-      ),
+      child: order.image != null && order.image!.isNotEmpty
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(Tokens.radius12),
+              child: Image.memory(
+                order.image!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.restaurant,
+                    size: Tokens.fontSize40,
+                    color: theme.colorScheme.primary,
+                  );
+                },
+              ),
+            )
+          : Icon(
+              Icons.restaurant,
+              size: Tokens.fontSize40,
+              color: theme.colorScheme.primary,
+            ),
     );
 
     return CustomCard(

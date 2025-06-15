@@ -12,7 +12,7 @@ class Address {
     this.id,
     required this.street,
     required this.number,
-    required this.complement,
+    this.complement = '',
     required this.neighborhood, 
     required this.city,
     required this.state,
@@ -28,13 +28,13 @@ class Address {
   static Address fromJson(Map<String, dynamic> json) {
     return Address(
       id: json['id'],
-      street: json['street'],
-      number: json['number'],
-      complement: json['complement'],
-      neighborhood: json['neighborhood'],
-      city: json['city'],
-      state: json['state'],
-      zipCode: json['zip_code'],
+      street: json['street'] ?? '',
+      number: json['number'] ?? '',
+      complement: json['complement'] ?? '',
+      neighborhood: json['neighborhood'] ?? '',
+      city: json['city'] ?? '',
+      state: json['state'] ?? '',
+      zipCode: json['zipCode'] ?? json['zip_code'] ?? '',
     );
   }
   

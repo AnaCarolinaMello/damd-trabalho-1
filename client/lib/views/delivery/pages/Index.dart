@@ -22,7 +22,7 @@ class _DeliveryIndexState extends State<DeliveryIndex> {
   Future<void> getAcceptedOrder() async {
     final prefs = await SharedPreferences.getInstance();
     user = User.fromJson(jsonDecode(prefs.getString('user') ?? '{}'));
-    final order = await OrderController.getAcceptOrder(user.id!);
+    final order = await OrderController.getAcceptedOrder(user.id!);
     print('order: ${order?.id}');
     setState(() {
       acceptedOrder = order;
