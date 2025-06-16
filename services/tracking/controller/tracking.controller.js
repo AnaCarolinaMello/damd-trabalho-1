@@ -48,47 +48,38 @@ export async function getDriverLocation(driverId) {
     return locations[0];
 }
 
-// Get delivery location for customer
+// Get delivery location for customer (using only tracking data)
 export async function getDeliveryLocation(orderId, customerId) {
-    // First verify the customer owns this order
-    const orderCheck = await query(
+    // Get the latest tracking info and driver location for this order
+    const tracking = await query(
         `
-    SELECT customer_id FROM orders WHERE id = $1
-  `,
-        [orderId]
-    );
-
-    if (!orderCheck.length) {
-        throw new Error('Order not found');
-    }
-
-    if (orderCheck[0].customer_id != customerId) {
-        throw new Error('You are not authorized to track this order');
-    }
-
-    // Get the latest driver location for this order
-    const locations = await query(
-        `
-    SELECT dl.*, dt.status as delivery_status
-    FROM driver_locations dl
-    LEFT JOIN delivery_tracking dt ON dt.order_id = dl.order_id AND dt.driver_id = dl.driver_id
-    WHERE dl.order_id = $1
-    ORDER BY dl.timestamp DESC
+    SELECT dt.*, dl.latitude as driver_latitude, dl.longitude as driver_longitude,
+           dl.speed, dl.heading, dl.accuracy, dl.timestamp as location_timestamp
+    FROM delivery_tracking dt
+    LEFT JOIN driver_locations dl ON dt.driver_id = dl.driver_id 
+        AND dl.order_id = dt.order_id
+        AND dl.timestamp = (
+            SELECT MAX(timestamp) FROM driver_locations 
+            WHERE driver_id = dt.driver_id AND order_id = dt.order_id
+        )
+    WHERE dt.order_id = $1
+    AND (dt.customer_id = $2 OR dt.customer_id IS NULL)
+    ORDER BY dt.timestamp DESC
     LIMIT 1
   `,
-        [orderId]
+        [orderId, customerId]
     );
 
-    if (!locations.length) {
-        throw new Error('Delivery location not available');
+    if (!tracking.length) {
+        throw new Error('Delivery tracking not available or unauthorized');
     }
 
-    return locations[0];
+    return tracking[0];
 }
 
 // Update delivery status with location
 export async function updateDeliveryStatus(statusData) {
-    const { order_id, driver_id, status, latitude, longitude, notes } = statusData;
+    const { order_id, driver_id, status, latitude, longitude, notes, destination_address, customer_id } = statusData;
 
     if (!order_id || !driver_id || !status) {
         throw new Error('Order ID, driver ID and status are required');
@@ -107,6 +98,8 @@ export async function updateDeliveryStatus(statusData) {
             latitude: latitude ? parseFloat(latitude) : null,
             longitude: longitude ? parseFloat(longitude) : null,
             notes: notes || null,
+            destination_address: destination_address || null,
+            customer_id: customer_id || null,
         },
         'delivery_tracking'
     );
@@ -116,23 +109,6 @@ export async function updateDeliveryStatus(statusData) {
 
 // Get delivery tracking history
 export async function getDeliveryHistory(orderId, userId) {
-    // Verify user has access to this order
-    const orderCheck = await query(
-        `
-    SELECT customer_id, driver_id FROM orders WHERE id = $1
-  `,
-        [orderId]
-    );
-
-    if (!orderCheck.length) {
-        throw new Error('Order not found');
-    }
-
-    const order = orderCheck[0];
-    if (order.customer_id != userId && order.driver_id != userId) {
-        throw new Error('You are not authorized to view this order history');
-    }
-
     const history = await query(
         `
     SELECT * FROM delivery_tracking
@@ -161,12 +137,12 @@ export async function getNearbyDeliveries(latitude, longitude, radiusKm = 5) {
     return deliveries;
 }
 
-// Calculate ETA based on distance and average speed
+// Calculate ETA based on driver and delivery locations from tracking
 export async function calculateETA(orderId, driverId) {
     // Get current driver location
     const driverLocation = await query(
         `
-    SELECT latitude, longitude FROM driver_locations
+    SELECT latitude, longitude, timestamp FROM driver_locations
     WHERE driver_id = $1
     ORDER BY timestamp DESC
     LIMIT 1
@@ -178,28 +154,28 @@ export async function calculateETA(orderId, driverId) {
         throw new Error('Driver location not available');
     }
 
-    // Get delivery address
-    const orderAddress = await query(
+    // Get delivery destination from last tracking update
+    const deliveryLocation = await query(
         `
-    SELECT a.street, a.number, a.neighborhood, a.city, a.state
-    FROM orders o
-    JOIN addresses a ON o.address_id = a.id
-    WHERE o.id = $1
+    SELECT latitude, longitude, status FROM delivery_tracking
+    WHERE order_id = $1 AND driver_id = $2
+    AND latitude IS NOT NULL AND longitude IS NOT NULL
+    ORDER BY timestamp DESC
+    LIMIT 1
   `,
-        [orderId]
+        [orderId, driverId]
     );
 
-    if (!orderAddress.length) {
-        throw new Error('Order address not found');
+    if (!deliveryLocation.length) {
+        throw new Error('Delivery destination not available in tracking data');
     }
 
     const avgSpeedKmh = 30;
     const distance = calculateDistance(
         driverLocation[0].latitude,
         driverLocation[0].longitude,
-        // Conferir a busca por posição
-        orderAddress[0].latitude,
-        orderAddress[0].longitude
+        deliveryLocation[0].latitude,
+        deliveryLocation[0].longitude
     );
 
     const etaMinutes = Math.round((distance / avgSpeedKmh) * 60);
@@ -208,21 +184,23 @@ export async function calculateETA(orderId, driverId) {
         distance_km: distance,
         eta_minutes: etaMinutes,
         driver_location: driverLocation[0],
-        delivery_address: orderAddress[0],
+        delivery_location: deliveryLocation[0],
+        status: deliveryLocation[0].status
     };
 }
 
 export async function getDriverActiveDeliveries(driverId) {
+    // Only return tracking information available in this microservice
     const deliveries = await query(
         `
-    SELECT DISTINCT dt.order_id, dt.status, dt.timestamp,
-           o.name as order_name, o.description,
-           a.street, a.number, a.neighborhood, a.city, a.state
+    SELECT dt.order_id, dt.status, dt.timestamp, dt.latitude, dt.longitude, dt.notes
     FROM delivery_tracking dt
-    JOIN orders o ON dt.order_id = o.id
-    JOIN addresses a ON o.address_id = a.id
     WHERE dt.driver_id = $1
     AND dt.status IN ('pending', 'preparing', 'accepted')
+    AND dt.timestamp = (
+        SELECT MAX(timestamp) FROM delivery_tracking dt2 
+        WHERE dt2.order_id = dt.order_id AND dt2.driver_id = dt.driver_id
+    )
     ORDER BY dt.timestamp DESC
   `,
         [driverId]

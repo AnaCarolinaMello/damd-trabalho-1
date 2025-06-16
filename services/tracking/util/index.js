@@ -24,6 +24,7 @@ export async function addEntity(obj, entity) {
         .map((_, i) => `$${i + 1}`)
         .join(', ');
     const values = Object.values(obj);
+    console.log(fields, placeholders, values, entity);
 
     const result = await pool.query(`INSERT INTO ${entity} (${fields}) VALUES (${placeholders}) RETURNING *`, values);
     return result.rows[0];
@@ -32,10 +33,19 @@ export async function addEntity(obj, entity) {
 export async function updateEntity(id, obj, entity) {
     delete obj.id;
 
-    const fields = Object.keys(obj)
+    // Filter out null/undefined values to only update fields that have actual values
+    const filteredObj = Object.fromEntries(
+        Object.entries(obj).filter(([key, value]) => value !== null && value !== undefined)
+    );
+
+    if (Object.keys(filteredObj).length === 0) {
+        throw new Error('No fields to update');
+    }
+
+    const fields = Object.keys(filteredObj)
         .map((field, index) => `"${field}" = $${index + 2}`)
         .join(', ');
-    const values = Object.values(obj);
+    const values = Object.values(filteredObj);
 
     const query = `UPDATE ${entity} SET ${fields} WHERE id = $1 RETURNING *`;
     const result = await pool.query(query, [id, ...values]);
@@ -64,7 +74,7 @@ export async function findNearbyDeliveries(latitude, longitude, radiusKm = 5) {
       location::geography,
       $3 * 1000
     )
-    AND status IN ('assigned', 'picked_up', 'in_transit')
+    AND status IN ('accepted', 'preparing', 'pending')
     ORDER BY distance_km
   `,
         [latitude, longitude, radiusKm]

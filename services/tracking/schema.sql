@@ -17,12 +17,14 @@ CREATE TABLE delivery_tracking (
   id SERIAL PRIMARY KEY,
   order_id INTEGER NOT NULL,
   driver_id INTEGER NOT NULL,
-  status TEXT CHECK( status IN ('pending','preparing','accepted','delivered','cancelled') ) NOT NULL DEFAULT 'assigned',
+  status TEXT CHECK( status IN ('pending','preparing','accepted','delivered','cancelled') ) NOT NULL DEFAULT 'pending',
   latitude DECIMAL(10, 8),
   longitude DECIMAL(11, 8),
   location GEOMETRY(POINT, 4326),
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  notes TEXT
+  notes TEXT,
+  destination_address TEXT,
+  customer_id INTEGER
 );
 
 CREATE OR REPLACE FUNCTION update_location_geometry()
@@ -49,6 +51,7 @@ CREATE INDEX idx_driver_locations_geom ON driver_locations USING GIST (location)
 
 CREATE INDEX idx_delivery_tracking_order ON delivery_tracking (order_id);
 CREATE INDEX idx_delivery_tracking_driver ON delivery_tracking (driver_id);
+CREATE INDEX idx_delivery_tracking_customer ON delivery_tracking (customer_id);
 CREATE INDEX idx_delivery_tracking_status ON delivery_tracking (status);
 CREATE INDEX idx_delivery_tracking_timestamp ON delivery_tracking (timestamp);
 CREATE INDEX idx_delivery_tracking_geom ON delivery_tracking USING GIST (location);
