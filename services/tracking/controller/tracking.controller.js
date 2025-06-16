@@ -94,7 +94,7 @@ export async function updateDeliveryStatus(statusData) {
         throw new Error('Order ID, driver ID and status are required');
     }
 
-    const validStatuses = ['assigned', 'picked_up', 'in_transit', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'preparing', 'accepted', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) {
         throw new Error('Invalid status');
     }
@@ -222,7 +222,7 @@ export async function getDriverActiveDeliveries(driverId) {
     JOIN orders o ON dt.order_id = o.id
     JOIN addresses a ON o.address_id = a.id
     WHERE dt.driver_id = $1
-    AND dt.status IN ('assigned', 'picked_up', 'in_transit')
+    AND dt.status IN ('pending', 'preparing', 'accepted')
     ORDER BY dt.timestamp DESC
   `,
         [driverId]
