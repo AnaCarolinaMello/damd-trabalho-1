@@ -10,8 +10,10 @@ const app = express();
 dotenv.config();
 
 app.use(cors());
-app.use(express.json());
+// Removed express.json() to avoid double parsing when proxying to services
 
+// Only parse JSON for gateway registry routes
+app.use("/gateway", express.json());
 app.use("/gateway", registryRoutes);
 
 app.use("/", dynamicRouter);

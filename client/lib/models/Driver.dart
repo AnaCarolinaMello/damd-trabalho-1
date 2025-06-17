@@ -19,19 +19,18 @@ class Driver extends User {
     super.type = UserType.driver,
     required super.name,
     required super.email,
-    required super.password,
+    super.password = '',
   });
 
   factory Driver.fromJson(Map<String, dynamic> json) {
     return Driver(
-      rating: json['rating'],
-      trips: json['trips'],
+      rating: json['rating'] ?? 0.0,
+      trips: json['trips'] ?? 0,
       vehicle: json['vehicle'] ?? 'Fiat',
       vehicleColor: json['vehicle_color'] ?? 'Branco',
       licensePlate: json['license_plate'] ?? 'ABC1234',
       name: json['name'],
-      email: json['email'],
-      password: json['password'],
+      email: json['email']
     );
   }
 

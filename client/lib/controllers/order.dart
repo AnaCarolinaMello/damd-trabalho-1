@@ -6,6 +6,7 @@ import 'package:damd_trabalho_1/models/Address.dart';
 import 'package:damd_trabalho_1/models/enum/Status.dart';
 import 'package:damd_trabalho_1/services/Database.dart';
 import 'package:damd_trabalho_1/services/Api.dart';
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 
 class OrderController {
   static final path = 'order';
@@ -60,6 +61,14 @@ class OrderController {
       final response = await ApiService.post('$path/accept/$orderId', {
         'driverId': driverId,
       });
+      
+      // Create tracking record when order is accepted
+      await TrackingService.updateDeliveryStatus(
+        orderId: orderId,
+        driverId: driverId,
+        status: TrackingService.statusAccepted,
+        notes: 'Pedido aceito pelo motorista',
+      );
     } catch (e) {
       await databaseService.assignDriverToOrder(orderId, driverId);
     }
@@ -81,6 +90,14 @@ class OrderController {
         'photo': imageBytes,
         'userId': userId,
       });
+      
+      // Update tracking when order is delivered
+      await TrackingService.updateDeliveryStatus(
+        orderId: orderId,
+        driverId: userId, // Assuming userId is driverId in this context
+        status: TrackingService.statusDelivered,
+        notes: 'Pedido entregue com sucesso',
+      );
     } catch (e) {
       print('error delivering order: $e and orderId: $orderId and userId: $userId');
       await databaseService.finishOrder(orderId, imageBytes);
@@ -117,11 +134,12 @@ class OrderController {
 
   static Future<void> rateOrder(int orderId, int userId, double rating) async {
     try {
-      final response = await ApiService.post('$path/rate/$orderId', {
+      await ApiService.post('$path/rate/$orderId', {
         'userId': userId,
         'rating': rating,
       });
     } catch (e) {
+      print('error rating order: $e');
       await databaseService.rateOrder(orderId, rating);
     }
   }
@@ -137,6 +155,44 @@ class OrderController {
       for (var order in orders) {
         await databaseService.createOrder(order, 1);
       }
+    }
+  }
+
+  // Tracking-related methods
+  
+  static Future<Map<String, dynamic>?> getOrderTracking(int orderId, int customerId) async {
+    try {
+      return await TrackingService.getDeliveryLocation(orderId, customerId);
+    } catch (e) {
+      print('Error getting order tracking: $e');
+      return null;
+    }
+  }
+
+  static Future<List<dynamic>> getOrderHistory(int orderId, int userId) async {
+    try {
+      return await TrackingService.getDeliveryHistory(orderId, userId);
+    } catch (e) {
+      print('Error getting order history: $e');
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> calculateOrderETA(int orderId, int driverId) async {
+    try {
+      return await TrackingService.calculateETA(orderId, driverId);
+    } catch (e) {
+      print('Error calculating ETA: $e');
+      return null;
+    }
+  }
+
+  static Future<List<dynamic>> getDriverActiveOrders(int driverId) async {
+    try {
+      return await TrackingService.getDriverActiveDeliveries(driverId);
+    } catch (e) {
+      print('Error getting driver active orders: $e');
+      return [];
     }
   }
 }

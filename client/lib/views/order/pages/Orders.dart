@@ -13,7 +13,7 @@ class Orders extends StatefulWidget {
   State<Orders> createState() => _OrdersState();
 }
 
-class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
+class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   bool isLoading = true;
   late List<Order> _orders;
@@ -87,13 +87,32 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addObserver(this);
     getOrders();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Recarrega as orders quando o app volta ao foco
+      getOrders();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recarrega as orders sempre que a tela for exibida
+    if (mounted) {
+      getOrders();
+    }
   }
 
   @override

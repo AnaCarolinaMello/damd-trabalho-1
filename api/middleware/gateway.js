@@ -1,5 +1,5 @@
 import axios from "axios";
-import { return200, return404, return503 } from "../util/index.js";
+import { return200, return404, return500, return503 } from "../util/index.js";
 import { serviceRegistry } from "../controllers/registry.controller.js";
 
 export async function dynamicRouter(req, res, next) {
@@ -13,13 +13,10 @@ export async function dynamicRouter(req, res, next) {
     console.log(serviceName);
     const service = serviceRegistry.getService(serviceName);
 
-    console.log(service);
     if (!service) return return404(res, `Service ${serviceName} not found`);
 
     const servicePath = "/" + urlParts.slice(1).join("/");
-    console.log(servicePath);
     const queryString = req.url.includes("?") ? req.url.split("?")[1] : "";
-    console.log(queryString);
     const fullServiceUrl = `${service.url}${servicePath}${
       queryString ? "?" + queryString : ""
     }`;
@@ -34,10 +31,14 @@ export async function dynamicRouter(req, res, next) {
         host: undefined,
       },
       timeout: 30000,
+      responseType: 'json',
     };
 
-    if (["post", "put", "patch"].includes(req.method.toLowerCase()))
-      axiosConfig.data = req.body;
+    // For POST/PUT/PATCH, pipe the raw request instead of using parsed body
+    if (["post", "put", "patch"].includes(req.method.toLowerCase())) {
+      axiosConfig.data = req;
+      axiosConfig.headers['transfer-encoding'] = undefined; // Remove transfer-encoding to avoid conflicts
+    }
 
     const response = await axios(axiosConfig);
 
@@ -50,8 +51,13 @@ export async function dynamicRouter(req, res, next) {
       return next();
 
     console.error(`Gateway error for ${serviceName}:`, error.message);
+    console.error(`Full error:`, error);
 
-    if (error.response) return return503(res, error.response.data);
+    if (error.code === 'ECONNABORTED') {
+      return return503(res, `Timeout error reaching ${serviceName} service`);
+    }
+
+    if (error.response) return return500(error.response.data, res);
 
     return return503(res, `Unable to reach ${serviceName} service`);
   }

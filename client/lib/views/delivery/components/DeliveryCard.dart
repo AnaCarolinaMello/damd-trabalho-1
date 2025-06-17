@@ -30,11 +30,9 @@ class _DeliveryCardState extends State<DeliveryCard> {
     final user = User.fromJson(jsonDecode(prefs.getString('user') ?? '{}'));
 
     await OrderController.acceptOrder(widget.order!.id!, user.id!);
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => const MainScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => MainScreen(item: 'orders')),
     );
     setState(() {
       loading = false;
