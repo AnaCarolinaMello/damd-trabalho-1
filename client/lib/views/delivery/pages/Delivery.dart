@@ -9,7 +9,7 @@ import 'package:damd_trabalho_1/views/order/components/SummaryItem.dart';
 import 'package:damd_trabalho_1/components/IconButton.dart';
 import 'package:damd_trabalho_1/views/delivery/pages/Finish.dart';
 import 'package:damd_trabalho_1/views/map/pages/Route.dart';
-import 'package:damd_trabalho_1/services/TrackingService.dart';
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'package:damd_trabalho_1/models/enum/Status.dart' as OrderStatus;
 import 'dart:async';
 
@@ -40,12 +40,10 @@ class _DeliveryState extends State<Delivery> {
   }
 
   void _startLocationUpdates() {
-    // Atualizar localização a cada 30 segundos
-    _locationTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _locationTimer = Timer.periodic(const Duration(minutes: 2), (timer) {
       _updateDriverLocation();
     });
 
-    // Primeira atualização imediata
     _updateDriverLocation();
   }
 
@@ -81,22 +79,20 @@ class _DeliveryState extends State<Delivery> {
 
   Future<void> _updateOrderStatusIfAccepted() async {
     // Se o pedido foi aceito, atualizar o status no tracking
-    if (widget.order.status == OrderStatus.Status.accepted && widget.order.driverId != null) {
-      try {
-        final position = await TrackingService.getCurrentLocation();
+    try {
+      final position = await TrackingService.getCurrentLocation();
 
-        await TrackingService.updateDeliveryStatus(
-          orderId: widget.order.id!,
-          driverId: widget.order.driverId!,
-          status: 'accepted',
-          latitude: position.latitude,
-          longitude: position.longitude,
-          destinationAddress: widget.order.address.toString(),
-          customerId: widget.order.customerId,
-        );
-      } catch (e) {
-        print('Erro ao atualizar status do pedido: $e');
-      }
+      await TrackingService.updateDriverLocation(
+        orderId: widget.order.id!,
+        driverId: widget.order.driverId!,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        speed: position.speed,
+        heading: position.heading,
+        accuracy: position.accuracy,
+      );
+    } catch (e) {
+      print('Erro ao atualizar status do pedido: $e');
     }
   }
 
@@ -123,7 +119,7 @@ class _DeliveryState extends State<Delivery> {
                   Status(order: widget.order, isActive: true),
                   const SizedBox(height: Tokens.spacing4),
                   Text(
-                    '${widget.order.date} ${widget.order.time}',
+                    '${DateTime.tryParse(widget.order.date)?.day ?? 0}/${DateTime.tryParse(widget.order.date)?.month ?? 0}/${DateTime.tryParse(widget.order.date)?.year ?? 0} ${widget.order.time.split(':')[0]}:${widget.order.time.split(':')[1]}',
                     style: TextStyle(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: Tokens.fontSize14,
@@ -194,7 +190,9 @@ class _DeliveryState extends State<Delivery> {
 
                   if (result == true && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Entrega finalizada com sucesso!')),
+                      const SnackBar(
+                        content: Text('Entrega finalizada com sucesso!'),
+                      ),
                     );
                     Navigator.pop(context, true);
                   }
@@ -218,7 +216,9 @@ class _DeliveryState extends State<Delivery> {
 
                   if (result == true && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Entrega finalizada com sucesso!')),
+                      const SnackBar(
+                        content: Text('Entrega finalizada com sucesso!'),
+                      ),
                     );
                     Navigator.pop(context, true);
                   }

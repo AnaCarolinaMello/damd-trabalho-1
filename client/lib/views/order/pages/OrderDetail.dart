@@ -12,7 +12,7 @@ import 'package:damd_trabalho_1/views/order/components/Status.dart';
 import 'package:damd_trabalho_1/views/order/components/Shop.dart';
 import 'package:damd_trabalho_1/views/order/components/EstimateTime.dart';
 import 'package:damd_trabalho_1/views/order/components/SeeMap.dart';
-import 'package:damd_trabalho_1/services/TrackingService.dart';
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'package:damd_trabalho_1/models/enum/Status.dart' as OrderStatus;
 import 'dart:async';
 

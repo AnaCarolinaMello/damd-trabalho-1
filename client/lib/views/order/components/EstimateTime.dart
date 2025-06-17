@@ -1,3 +1,4 @@
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'package:damd_trabalho_1/models/Time.dart';
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
@@ -39,12 +40,15 @@ class _EstimateTimeState extends State<EstimateTime> {
   void init() async {
     try {
       await getAddress();
-      final timeDistance = await RouteService.getRouteDuration(
-        _location,
-        _destination,
+      final timeDistance = await TrackingService.calculateETA(
+        widget.order.id!,
+        widget.order.driverId!,
       );
       setState(() {
-        _timeDistance = timeDistance;
+        _timeDistance = TimeModel(
+          time: '${timeDistance['eta_minutes']} min',
+          distance: '${timeDistance['distance_km']} km',
+        );
       });
     } catch (e) {
       print('Error getting route duration: $e');

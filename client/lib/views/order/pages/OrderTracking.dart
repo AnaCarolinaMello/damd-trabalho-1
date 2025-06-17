@@ -8,7 +8,7 @@ import 'package:damd_trabalho_1/views/order/components/TrackActions.dart';
 import 'package:damd_trabalho_1/views/order/components/OrderResume.dart';
 import 'package:damd_trabalho_1/views/order/components/Status.dart';
 import 'package:damd_trabalho_1/views/order/components/SeeMap.dart';
-import 'package:damd_trabalho_1/services/TrackingService.dart';
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'dart:async';
 
 class OrderTracking extends StatefulWidget {

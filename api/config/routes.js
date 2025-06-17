@@ -1,7 +1,9 @@
 export const publicRoutes = [
-    '/authentication/login',
-    '/authentication/',
-    '/authentication/health',
+    '/auth/login',
+    '/auth/',
+    '/auth/health',
+    '/order/health',
+    '/tracking/health',
     '/gateway/register',
     '/gateway/unregister',
     '/gateway/services',
@@ -9,8 +11,18 @@ export const publicRoutes = [
 ];
 
 export const roleBasedRoutes = {
-    driver: ['/tracking', '/order/driver'],
-    customer: ['/order/customer'],
+    driver: [
+        '/order/driver',
+        '/order/accept',
+        '/order/deliver',
+        '/order/available'
+    ],
+    customer: [
+        '/order/customer',
+        '/order/user',
+        '/order/rate',
+        '/order/cancel'
+    ],
 };
 
 export function isPublicRoute(path) {

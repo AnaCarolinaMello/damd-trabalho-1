@@ -61,14 +61,6 @@ class OrderController {
       final response = await ApiService.post('$path/accept/$orderId', {
         'driverId': driverId,
       });
-      
-      // Create tracking record when order is accepted
-      await TrackingService.updateDeliveryStatus(
-        orderId: orderId,
-        driverId: driverId,
-        status: TrackingService.statusAccepted,
-        notes: 'Pedido aceito pelo motorista',
-      );
     } catch (e) {
       await databaseService.assignDriverToOrder(orderId, driverId);
     }
@@ -95,7 +87,7 @@ class OrderController {
       await TrackingService.updateDeliveryStatus(
         orderId: orderId,
         driverId: userId, // Assuming userId is driverId in this context
-        status: TrackingService.statusDelivered,
+        status: Status.delivered,
         notes: 'Pedido entregue com sucesso',
       );
     } catch (e) {
@@ -118,14 +110,16 @@ class OrderController {
       name: order.name,
       description: order.description,
       date: DateTime.now().toIso8601String(),
-      time: DateTime.now().toIso8601String(),
+      time: "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
       status: Status.pending,
       items: order.items,
       address: order.address,
       customerId: userId,
+      deliveryFee: order.deliveryFee,
+      discount: order.discount,
     );
     try {
-      final response = await ApiService.post(path, newOrder);
+      final response = await ApiService.post(path, newOrder.toJson());
       return Order.fromJson(response);
     } catch (e) {
       return await databaseService.createOrder(newOrder, userId);

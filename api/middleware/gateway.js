@@ -4,9 +4,6 @@ import { serviceRegistry } from '../controllers/registry.controller.js';
 import { authenticateToken, requireRole } from './auth.js';
 import { isPublicRoute, getRequiredRole } from '../config/routes.js';
 
-// Routes that don't require authentication
-const publicRoutes = ['/authentication/login', '/authentication/', '/authentication/health'];
-
 export async function dynamicRouter(req, res, next) {
     const urlParts = req.path.split('/').filter((part) => part);
 
@@ -16,10 +13,7 @@ export async function dynamicRouter(req, res, next) {
     const fullPath = req.path;
 
     // Check if route requires authentication
-    if (isPublicRoute(fullPath)) {
-        // Route to service without authentication
-        return await routeToService(req, res, next, serviceName, urlParts);
-    }
+    if (isPublicRoute(fullPath)) return await routeToService(req, res, next, serviceName, urlParts);
 
     // Check if route requires specific role
     const requiredRole = getRequiredRole(fullPath);
@@ -82,7 +76,7 @@ async function routeToService(req, res, next, serviceName, urlParts) {
             return return503(res, `Timeout error reaching ${serviceName} service`);
         }
 
-        if (error.response) return return500(error.response.data, res);
+        if (error.response) return return500(error.response.data, req, res);
 
         return return503(res, `Unable to reach ${serviceName} service`);
     }

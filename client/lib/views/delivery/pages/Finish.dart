@@ -7,8 +7,9 @@ import 'package:damd_trabalho_1/views/order/components/Shop.dart';
 import 'package:damd_trabalho_1/views/delivery/components/PhotoPreview.dart';
 import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:damd_trabalho_1/services/TrackingService.dart';
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'dart:convert';
 
 class FinishDelivery extends StatefulWidget {
@@ -113,7 +114,7 @@ class _FinishDeliveryState extends State<FinishDelivery> {
           await TrackingService.updateDeliveryStatus(
             orderId: widget.order.id!,
             driverId: widget.order.driverId!,
-            status: 'delivered',
+            status: Status.delivered,
             latitude: position.latitude,
             longitude: position.longitude,
             notes: 'Entrega finalizada com foto de confirmação',

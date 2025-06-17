@@ -1,4 +1,6 @@
 import 'package:damd_trabalho_1/services/Api.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class TrackingService {
@@ -27,6 +29,7 @@ class TrackingService {
 
       return await ApiService.post('$_trackingPath/location', data);
     } catch (e) {
+      print('error: $e');
       throw Exception('Failed to update driver location: $e');
     }
   }
@@ -45,7 +48,7 @@ class TrackingService {
     required int orderId,
     required int driverId,
     int? customerId,
-    required String status,
+    required Status status,
     double? latitude,
     double? longitude,
     String? notes,
@@ -56,7 +59,7 @@ class TrackingService {
         'order_id': orderId,
         'driver_id': driverId,
         if (customerId != null) 'customer_id': customerId,
-        'status': status,
+        'status': status.name,
         if (latitude != null) 'latitude': latitude,
         if (longitude != null) 'longitude': longitude,
         if (notes != null) 'notes': notes,
@@ -104,8 +107,11 @@ class TrackingService {
   // Calculate ETA
   static Future<Map<String, dynamic>> calculateETA(int orderId, int driverId) async {
     try {
-      return await ApiService.get('$_trackingPath/eta/$orderId/driver/$driverId');
+      final response = await ApiService.get('$_trackingPath/eta/$orderId/driver/$driverId');
+      print('response: $response');
+      return response;
     } catch (e) {
+      print('error: $e');
       throw Exception('Failed to calculate ETA: $e');
     }
   }
@@ -135,10 +141,27 @@ class TrackingService {
     );
   }
 
-  // Status constants
-  static const String statusPending = 'pending';
-  static const String statusPreparing = 'preparing';
-  static const String statusAccepted = 'accepted';
-  static const String statusDelivered = 'delivered';
-  static const String statusCancelled = 'cancelled';
+   static Future<Position> getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('Serviços de localização estão desabilitados.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Permissões de localização foram negadas.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Permissões de localização foram negadas permanentemente.');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
 }

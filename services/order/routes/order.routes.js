@@ -29,6 +29,7 @@ router.get("/available", async (req, res) => {
     const orders = await getAvailableOrders();
     return200(orders, res);
   } catch (error) {
+    console.log(error);
     return500(error, req, res);
   }
 });

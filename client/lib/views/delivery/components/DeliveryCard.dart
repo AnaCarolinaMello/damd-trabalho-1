@@ -1,3 +1,5 @@
+import 'package:damd_trabalho_1/controllers/tracking.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
@@ -7,6 +9,8 @@ import 'package:damd_trabalho_1/components/ActionButton.dart';
 import 'package:damd_trabalho_1/utils/index.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
 import 'package:damd_trabalho_1/models/User.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 
@@ -28,8 +32,35 @@ class _DeliveryCardState extends State<DeliveryCard> {
     });
     final prefs = await SharedPreferences.getInstance();
     final user = User.fromJson(jsonDecode(prefs.getString('user') ?? '{}'));
+    final position = await TrackingService.getCurrentLocation();
+    List<Location> locations = await locationFromAddress(
+      widget.order!.address.fullAddress,
+    );
+    final latLng = LatLng(
+        locations.first.latitude,
+        locations.first.longitude,
+      );
+    print('latLng: ${latLng.latitude}, ${latLng.longitude}');
+    print('position: ${position.latitude}, ${position.longitude}');
 
     await OrderController.acceptOrder(widget.order!.id!, user.id!);
+    await TrackingService.updateDeliveryStatus(
+      orderId: widget.order!.id!,
+      driverId: user.id!,
+      latitude: latLng.latitude,
+      longitude: latLng.longitude,
+      status: Status.accepted,
+      destinationAddress: widget.order!.address.fullAddress,
+    );
+    await TrackingService.updateDriverLocation(
+      driverId: user.id!,
+      orderId: widget.order!.id!,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      speed: position.speed,
+      heading: position.heading,
+      accuracy: position.accuracy,
+    );
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => MainScreen(item: 'orders')),
