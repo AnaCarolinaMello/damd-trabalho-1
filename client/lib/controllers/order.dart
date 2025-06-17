@@ -96,6 +96,17 @@ class OrderController {
     }
   }
 
+  static Future<void> cancelOrder(int orderId, int userId) async {
+    try {
+      await ApiService.post('$path/cancel/$orderId', {
+        'userId': userId,
+      });
+    } catch (e) {
+      print('error canceling order: $e and orderId: $orderId and userId: $userId');
+      await databaseService.updateOrderStatus(orderId, Status.cancelled);
+    }
+  }
+
   static Future<List<Order>> getAvailableOrders() async {
     try {
       final response = await ApiService.get('$path/available');

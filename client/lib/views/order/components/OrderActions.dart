@@ -4,6 +4,7 @@ import 'package:damd_trabalho_1/components/ActionButton.dart';
 import 'package:damd_trabalho_1/views/order/pages/OrderDetail.dart';
 import 'package:damd_trabalho_1/views/order/pages/OrderTracking.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart' as OrderStatus;
 
 class OrderActions extends StatelessWidget {
   final Order order;
@@ -66,7 +67,7 @@ class OrderActions extends StatelessWidget {
               label: 'Pedir novamente',
               icon: Icons.replay_outlined,
               onTap: orderAgain,
-              isPrimary: order.rating == 0,
+              isPrimary: order.rating == 0 && order.status != OrderStatus.Status.cancelled,
             ),
         ],
       ),

@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
@@ -15,7 +18,8 @@ import 'package:damd_trabalho_1/views/order/components/SeeMap.dart';
 import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'package:damd_trabalho_1/models/enum/Status.dart' as OrderStatus;
 import 'dart:async';
-
+import 'package:damd_trabalho_1/controllers/order.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OrderDetail extends StatefulWidget {
   final Order order;
@@ -23,7 +27,13 @@ class OrderDetail extends StatefulWidget {
   final Function() orderAgain;
   final Function(Order, double) rateOrder;
 
-  const OrderDetail({super.key, required this.order, this.isActive = false, required this.orderAgain, required this.rateOrder});
+  const OrderDetail({
+    super.key,
+    required this.order,
+    this.isActive = false,
+    required this.orderAgain,
+    required this.rateOrder,
+  });
 
   @override
   State<OrderDetail> createState() => _OrderDetailState();
@@ -37,6 +47,7 @@ class _OrderDetailState extends State<OrderDetail> {
   double? distanceKm;
   int? etaMinutes;
   bool _isLoadingTracking = false;
+  int userId = 0;
 
   @override
   void initState() {
@@ -64,14 +75,35 @@ class _OrderDetailState extends State<OrderDetail> {
   }
 
   Future<void> _loadOrder() async {
+    final prefs = await SharedPreferences.getInstance();
+    userId = jsonDecode(prefs.getString('user')!)['id'] as int;
+  
     setState(() {
       order = widget.order;
       isLoading = false;
     });
   }
 
+  void cancelOrder() async {
+    try {
+      await OrderController.cancelOrder(order!.id!, userId);
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen(item: 'orders')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao cancelar o pedido')),
+      );
+    }
+  }
+
   Future<void> _loadDeliveryTracking() async {
-    if (!widget.isActive || order?.id == null || order?.customerId == null || _isLoadingTracking) {
+    if (!widget.isActive ||
+        order?.id == null ||
+        order?.customerId == null ||
+        _isLoadingTracking) {
       return;
     }
 
@@ -259,7 +291,8 @@ class _OrderDetailState extends State<OrderDetail> {
 
             const Divider(),
 
-            if (widget.order.image != null && widget.order.image!.isNotEmpty) ...[
+            if (widget.order.image != null &&
+                widget.order.image!.isNotEmpty) ...[
               Image.memory(
                 widget.order.image!,
                 errorBuilder: (context, error, stackTrace) {
@@ -332,15 +365,32 @@ class _OrderDetailState extends State<OrderDetail> {
                 ),
               ),
 
+            if (order!.status == OrderStatus.Status.pending)
+              Padding(
+                padding: const EdgeInsets.all(Tokens.spacing16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: CustomIconButton(
+                    icon: Icons.cancel_outlined,
+                    label: 'Cancelar Pedido',
+                    onPressed: cancelOrder,
+                  ),
+                ),
+              ),
+
             Padding(
               padding: const EdgeInsets.all(Tokens.spacing16),
-              child: SeeMap(status: order!.status, order: order!, noPadding: true),
+              child: SeeMap(
+                status: order!.status,
+                order: order!,
+                noPadding: true,
+              ),
             ),
 
             // Avaliação ou botões para pedidos entregues
             if (!widget.isActive) ...[
               const SizedBox(height: Tokens.spacing16),
-              if (order!.rating == 0)
+              if (order!.rating == 0 && order!.status != OrderStatus.Status.cancelled)
                 Rate(
                   rateOrder: (rating) async {
                     await widget.rateOrder(order!, rating);
@@ -350,9 +400,7 @@ class _OrderDetailState extends State<OrderDetail> {
                   },
                 )
               else
-                Rating(
-                  orderAgain: widget.orderAgain,
-                ),
+                Rating(orderAgain: widget.orderAgain),
             ],
 
             const SizedBox(height: Tokens.spacing24),

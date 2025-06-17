@@ -22,15 +22,16 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin, Wi
   int userId = 0;
 
   getOrders() async {
+    isLoading = true;
     final prefs = await SharedPreferences.getInstance();
     userId = jsonDecode(prefs.getString('user')!)['id'] as int;
     _orders = await OrderController.getOrders(userId);
 
     setState(() {
       _activeOrders =
-          _orders.where((order) => order.status != Status.delivered).toList();
+          _orders.where((order) => order.status != Status.delivered && order.status != Status.cancelled).toList();
       _pastOrders =
-          _orders.where((order) => order.status == Status.delivered).toList();
+          _orders.where((order) => order.status == Status.delivered || order.status == Status.cancelled).toList();
       isLoading = false;
     });
   }
@@ -43,6 +44,8 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin, Wi
     setState(() {
       _activeOrders.add(newOrder);
     });
+    
+    await getOrders();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,6 +75,7 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin, Wi
           final index = _pastOrders.indexOf(order);
           _pastOrders[index] = order;
         });
+        await getOrders();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Avaliação enviada com sucesso')),
         );
