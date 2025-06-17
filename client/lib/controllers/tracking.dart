@@ -141,4 +141,4 @@ class TrackingService {
   static const String statusAccepted = 'accepted';
   static const String statusDelivered = 'delivered';
   static const String statusCancelled = 'cancelled';
-} 
+}

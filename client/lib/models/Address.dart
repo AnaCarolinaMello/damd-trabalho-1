@@ -13,7 +13,7 @@ class Address {
     required this.street,
     required this.number,
     this.complement = '',
-    required this.neighborhood, 
+    required this.neighborhood,
     required this.city,
     required this.state,
     required this.zipCode,
@@ -37,7 +37,7 @@ class Address {
       zipCode: json['zipCode'] ?? json['zip_code'] ?? '',
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

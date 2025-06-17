@@ -8,16 +8,16 @@ class ApiService {
   static Future<dynamic> get(String endpoint) async {
     final url = '$baseUrl/$endpoint';
     print('Calling API: $url'); // Debug log
-    
+
     try {
       final response = await http.get(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
       );
-      
+
       print('Status code: ${response.statusCode}'); // Debug log
       print('Response body: ${response.body}'); // Debug log
-      
+
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }
@@ -36,7 +36,7 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
       );
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         return jsonDecode(response.body);
       }
@@ -54,7 +54,7 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
       );
-      
+
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }
@@ -71,7 +71,7 @@ class ApiService {
         Uri.parse('$baseUrl/$endpoint'),
         headers: {'Content-Type': 'application/json'},
       );
-      
+
       if (response.statusCode != 204 && response.statusCode != 200) {
         throw Exception('Failed to delete: ${response.statusCode}');
       }

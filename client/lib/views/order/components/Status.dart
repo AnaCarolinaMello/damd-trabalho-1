@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/utils/index.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
-import 'package:damd_trabalho_1/models/enum/Status.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart' as OrderStatus;
 
 class Status extends StatelessWidget {
   final Order order;
