@@ -1,4 +1,4 @@
-import { addEntity, query } from '../util/index.js';
+import { addEntity, getEntity, query } from '../util/index.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -63,4 +63,9 @@ export async function loginUser(credentials) {
 export async function validateToken(token) {
   const decoded = jwt.verify(token, JWT_SECRET);
   return decoded;
+}
+
+export async function getUserById(id) {
+  const user = await getEntity(id, 'users');
+  return user;
 }

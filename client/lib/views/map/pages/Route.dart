@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/services/Route.dart';
@@ -204,12 +205,16 @@ class _RouteState extends State<RoutePage> {
   Future<void> updateRoute(LatLng position) async {
     // Update route duration
     try {
-      final timeDistance = await RouteService.getRouteDuration(
-        position,
-        _destination,
+      final timeDistance = await TrackingService.calculateETA(
+        widget.order.id!,
+        widget.order.driverId!,
       );
       setState(() {
-        _timeDistance = timeDistance;
+        print('timeDistance: ${timeDistance['eta_minutes']}');
+        _timeDistance = TimeModel(
+          time: '${timeDistance['eta_minutes']} min',
+          distance: '${timeDistance['distance_km']} km',
+        );
         _gettingTimeDistance = false;
       });
 
@@ -392,12 +397,15 @@ class _RouteState extends State<RoutePage> {
 
   Future<void> getRouteDuration() async {
     try {
-      final timeDistance = await RouteService.getRouteDuration(
-        _location,
-        _destination,
+      final timeDistance = await TrackingService.calculateETA(
+        widget.order.id!,
+        widget.order.driverId!,
       );
       setState(() {
-        _timeDistance = timeDistance;
+        _timeDistance = TimeModel(
+          time: '${timeDistance['eta_minutes']} min',
+          distance: '${timeDistance['distance_km']} km',
+        );
         _gettingTimeDistance = false;
       });
     } catch (e) {

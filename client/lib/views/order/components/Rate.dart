@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/components/Button.dart';
-import 'package:damd_trabalho_1/models/Order.dart';
-import 'package:damd_trabalho_1/controllers/order.dart';
+
 class Rate extends StatefulWidget {
   final Function(double) rateOrder;
 

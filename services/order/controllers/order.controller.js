@@ -14,14 +14,15 @@ export async function getOrders() {
   return orders;
 }
 
-export async function getOrderById(id) {
+export async function getOrderById(id, userId) {
+  console.log(`Getting order by ID: ${id}, userId: ${userId}`);
   const orders = await query(
     defaultQuery.replace("GROUP BY", "WHERE o.id = $1 GROUP BY"),
     [id]
   );
   const order = orders[0];
   if (!order) throw new Error("Order not found");
-  if (order.customer_id != userId && order.driver_id != userId)
+  if (userId && order.customer_id != userId && order.driver_id != userId)
     throw new Error("You are not allowed to access this order");
   return order;
 }
@@ -55,7 +56,6 @@ export async function getDriverOrder(driverId) {
 }
 
 export async function createOrder(order) {
-  order.address.id = crypto.randomUUID();
   if (order.address) {
     const address = await addEntity(order.address, "addresses");
     order.address_id = address.id;
@@ -64,14 +64,12 @@ export async function createOrder(order) {
   const items = order.items;
   delete order.items;
 
-  order.id = crypto.randomUUID();
   order.date = new Date();
   order.time = new Date().toTimeString().split(" ")[0]; // Extract HH:MM:SS
   const newOrder = await addEntity(order, "orders");
 
   if (items) {
     for (const item of items) {
-      item.id = crypto.randomUUID();
       item.order_id = newOrder.id;
       await addEntity(item, "order_items");
     }

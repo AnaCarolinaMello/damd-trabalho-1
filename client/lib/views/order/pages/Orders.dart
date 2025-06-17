@@ -13,7 +13,7 @@ class Orders extends StatefulWidget {
   State<Orders> createState() => _OrdersState();
 }
 
-class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
+class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   bool isLoading = true;
   late List<Order> _orders;
@@ -22,15 +22,16 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
   int userId = 0;
 
   getOrders() async {
+    isLoading = true;
     final prefs = await SharedPreferences.getInstance();
     userId = jsonDecode(prefs.getString('user')!)['id'] as int;
     _orders = await OrderController.getOrders(userId);
 
     setState(() {
       _activeOrders =
-          _orders.where((order) => order.status != Status.delivered).toList();
+          _orders.where((order) => order.status != Status.delivered && order.status != Status.cancelled).toList();
       _pastOrders =
-          _orders.where((order) => order.status == Status.delivered).toList();
+          _orders.where((order) => order.status == Status.delivered || order.status == Status.cancelled).toList();
       isLoading = false;
     });
   }
@@ -43,6 +44,8 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
     setState(() {
       _activeOrders.add(newOrder);
     });
+    
+    await getOrders();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,6 +75,7 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
           final index = _pastOrders.indexOf(order);
           _pastOrders[index] = order;
         });
+        await getOrders();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Avaliação enviada com sucesso')),
         );
@@ -87,13 +91,32 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    WidgetsBinding.instance.addObserver(this);
     getOrders();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Recarrega as orders quando o app volta ao foco
+      getOrders();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recarrega as orders sempre que a tela for exibida
+    if (mounted) {
+      getOrders();
+    }
   }
 
   @override

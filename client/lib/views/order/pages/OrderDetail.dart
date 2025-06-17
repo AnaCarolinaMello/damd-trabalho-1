@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
@@ -12,7 +15,11 @@ import 'package:damd_trabalho_1/views/order/components/Status.dart';
 import 'package:damd_trabalho_1/views/order/components/Shop.dart';
 import 'package:damd_trabalho_1/views/order/components/EstimateTime.dart';
 import 'package:damd_trabalho_1/views/order/components/SeeMap.dart';
-
+import 'package:damd_trabalho_1/controllers/tracking.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart' as OrderStatus;
+import 'dart:async';
+import 'package:damd_trabalho_1/controllers/order.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OrderDetail extends StatefulWidget {
   final Order order;
@@ -20,7 +27,13 @@ class OrderDetail extends StatefulWidget {
   final Function() orderAgain;
   final Function(Order, double) rateOrder;
 
-  const OrderDetail({super.key, required this.order, this.isActive = false, required this.orderAgain, required this.rateOrder});
+  const OrderDetail({
+    super.key,
+    required this.order,
+    this.isActive = false,
+    required this.orderAgain,
+    required this.rateOrder,
+  });
 
   @override
   State<OrderDetail> createState() => _OrderDetailState();
@@ -29,18 +42,113 @@ class OrderDetail extends StatefulWidget {
 class _OrderDetailState extends State<OrderDetail> {
   Order? order;
   bool isLoading = true;
+  Timer? _trackingTimer;
+  Map<String, dynamic>? deliveryData;
+  double? distanceKm;
+  int? etaMinutes;
+  bool _isLoadingTracking = false;
+  int userId = 0;
 
   @override
   void initState() {
     super.initState();
     _loadOrder();
+    if (widget.isActive) {
+      _startTrackingUpdates();
+    }
+  }
+
+  @override
+  void dispose() {
+    _trackingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTrackingUpdates() {
+    // Atualizar tracking a cada 15 segundos para pedidos ativos
+    _trackingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      _loadDeliveryTracking();
+    });
+
+    // Primeira carga imediata
+    _loadDeliveryTracking();
   }
 
   Future<void> _loadOrder() async {
+    final prefs = await SharedPreferences.getInstance();
+    userId = jsonDecode(prefs.getString('user')!)['id'] as int;
+  
     setState(() {
       order = widget.order;
       isLoading = false;
     });
+  }
+
+  void cancelOrder() async {
+    try {
+      await OrderController.cancelOrder(order!.id!, userId);
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen(item: 'orders')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao cancelar o pedido')),
+      );
+    }
+  }
+
+  Future<void> _loadDeliveryTracking() async {
+    if (!widget.isActive ||
+        order?.id == null ||
+        order?.customerId == null ||
+        _isLoadingTracking) {
+      return;
+    }
+
+    setState(() {
+      _isLoadingTracking = true;
+    });
+
+    try {
+      // Obter dados de tracking da entrega
+      final tracking = await TrackingService.getDeliveryLocation(
+        order!.id!,
+        order!.customerId!,
+      );
+
+      if (tracking != null) {
+        setState(() {
+          deliveryData = tracking;
+        });
+
+        // Se temos localização do motorista, calcular ETA
+        if (order!.driverId != null) {
+          try {
+            final eta = await TrackingService.calculateETA(
+              order!.id!,
+              order!.driverId!,
+            );
+
+            if (eta != null) {
+              setState(() {
+                distanceKm = eta['distance_km']?.toDouble();
+                etaMinutes = eta['eta_minutes']?.toInt();
+              });
+            }
+          } catch (e) {
+            print('Erro ao calcular ETA: $e');
+          }
+        }
+      }
+    } catch (e) {
+      print('Erro ao carregar tracking: $e');
+    } finally {
+      setState(() {
+        _isLoadingTracking = false;
+      });
+    }
   }
 
   @override
@@ -87,6 +195,92 @@ class _OrderDetailState extends State<OrderDetail> {
                   if (widget.isActive) ...[
                     const SizedBox(height: Tokens.spacing16),
                     EstimateTime(order: order!),
+
+                    // Informações de tracking em tempo real
+                    if (distanceKm != null || etaMinutes != null) ...[
+                      const SizedBox(height: Tokens.spacing12),
+                      Container(
+                        padding: const EdgeInsets.all(Tokens.spacing12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on,
+                                  size: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: Tokens.spacing4),
+                                Text(
+                                  'Informações de Entrega',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: Tokens.fontSize14,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                if (_isLoadingTracking) ...[
+                                  const SizedBox(width: Tokens.spacing8),
+                                  SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: Tokens.spacing8),
+                            Row(
+                              children: [
+                                if (distanceKm != null) ...[
+                                  Icon(
+                                    Icons.straighten,
+                                    size: 14,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: Tokens.spacing4),
+                                  Text(
+                                    'Distância: ${distanceKm!.toStringAsFixed(1)} km',
+                                    style: TextStyle(
+                                      fontSize: Tokens.fontSize12,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                                if (distanceKm != null && etaMinutes != null)
+                                  const SizedBox(width: Tokens.spacing16),
+                                if (etaMinutes != null) ...[
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 14,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: Tokens.spacing4),
+                                  Text(
+                                    'ETA: ${etaMinutes!} min',
+                                    style: TextStyle(
+                                      fontSize: Tokens.fontSize12,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -96,8 +290,9 @@ class _OrderDetailState extends State<OrderDetail> {
             Shop(order: order!, isActive: widget.isActive),
 
             const Divider(),
-            
-            if (widget.order.image != null && widget.order.image!.isNotEmpty) ...[
+
+            if (widget.order.image != null &&
+                widget.order.image!.isNotEmpty) ...[
               Image.memory(
                 widget.order.image!,
                 errorBuilder: (context, error, stackTrace) {
@@ -170,15 +365,32 @@ class _OrderDetailState extends State<OrderDetail> {
                 ),
               ),
 
+            if (order!.status == OrderStatus.Status.pending)
+              Padding(
+                padding: const EdgeInsets.all(Tokens.spacing16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: CustomIconButton(
+                    icon: Icons.cancel_outlined,
+                    label: 'Cancelar Pedido',
+                    onPressed: cancelOrder,
+                  ),
+                ),
+              ),
+
             Padding(
               padding: const EdgeInsets.all(Tokens.spacing16),
-              child: SeeMap(status: order!.status, order: order!, noPadding: true),
+              child: SeeMap(
+                status: order!.status,
+                order: order!,
+                noPadding: true,
+              ),
             ),
 
             // Avaliação ou botões para pedidos entregues
             if (!widget.isActive) ...[
               const SizedBox(height: Tokens.spacing16),
-              if (order!.rating == 0)
+              if (order!.rating == 0 && order!.status != OrderStatus.Status.cancelled)
                 Rate(
                   rateOrder: (rating) async {
                     await widget.rateOrder(order!, rating);
@@ -188,9 +400,7 @@ class _OrderDetailState extends State<OrderDetail> {
                   },
                 )
               else
-                Rating(
-                  orderAgain: widget.orderAgain,
-                ),
+                Rating(orderAgain: widget.orderAgain),
             ],
 
             const SizedBox(height: Tokens.spacing24),

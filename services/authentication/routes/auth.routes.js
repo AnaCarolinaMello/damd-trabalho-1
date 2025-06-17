@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, loginUser, validateToken } from "../controllers/auth.controller.js";
+import { registerUser, loginUser, validateToken, getUserById } from "../controllers/auth.controller.js";
 import { return200, return500, return403 } from "../util/index.js";
 const router = express.Router();
 
@@ -13,8 +13,18 @@ router.post("/", async (req, res) => {
     }
 });
 
+router.get("/:id", async (req, res) => {
+    try {
+        const response = await getUserById(req.params.id);
+        return return200(response, res);
+    } catch (error) {
+        return return500(error, req, res);
+    }
+});
+
 router.post("/login", async (req, res) => {
     try {
+        console.log('req.body', req.body);
         const response = await loginUser(req.body);
         return return200(response, res);
     } catch (error) {

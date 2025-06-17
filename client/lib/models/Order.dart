@@ -42,17 +42,17 @@ class Order {
 
   static Uint8List? _convertToUint8List(dynamic imageData) {
     if (imageData == null) return null;
-    
+
     try {
       if (imageData is Map && imageData['data'] != null) {
         final bufferData = imageData['data'];
         if (bufferData is List) {
           // Convert ASCII bytes to string
           final jsonString = String.fromCharCodes(List<int>.from(bufferData));
-          
+
           // Fix malformed JSON: {"255","216",...} -> ["255","216",...]
           final fixedJson = jsonString.replaceFirst('{', '[').replaceFirst(RegExp(r'}$'), ']');
-          
+
           final decoded = jsonDecode(fixedJson);
           if (decoded is List) {
             return Uint8List.fromList(decoded.map<int>((e) => int.parse(e.toString())).toList());
@@ -77,7 +77,7 @@ class Order {
       // Silently fail - images are optional
       return null;
     }
-    
+
     return null;
   }
 
@@ -85,7 +85,7 @@ class Order {
     var itemsList = json['items'] ?? [];
     List<OrderItem> orderItems;
     var address = json['address'];
-    
+
     // Verifica se os itens já são objetos OrderItem ou precisam ser convertidos
     if (itemsList is List<OrderItem>) {
       orderItems = itemsList;

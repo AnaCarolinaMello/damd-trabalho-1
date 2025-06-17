@@ -7,7 +7,9 @@ import 'package:damd_trabalho_1/views/order/components/Shop.dart';
 import 'package:damd_trabalho_1/views/delivery/components/PhotoPreview.dart';
 import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
+import 'package:damd_trabalho_1/models/enum/Status.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'dart:convert';
 
 class FinishDelivery extends StatefulWidget {
@@ -103,9 +105,30 @@ class _FinishDeliveryState extends State<FinishDelivery> {
       _isSubmitting = true;
     });
 
-    // Simulating API call
     try {
+      // Atualizar status no tracking antes de finalizar
+      if (widget.order.driverId != null) {
+        try {
+          final position = await TrackingService.getCurrentLocation();
+
+          await TrackingService.updateDeliveryStatus(
+            orderId: widget.order.id!,
+            driverId: widget.order.driverId!,
+            status: Status.delivered,
+            latitude: position.latitude,
+            longitude: position.longitude,
+            notes: 'Entrega finalizada com foto de confirmação',
+            destinationAddress: widget.order.address.toString(),
+            customerId: widget.order.customerId,
+          );
+        } catch (e) {
+          print('Erro ao atualizar status de entrega no tracking: $e');
+        }
+      }
+
+      // Finalizar pedido no sistema principal
       await OrderController.deliverOrder(widget.order.id!, userId, _photoFile!);
+
       showDialog(
         context: context,
         builder: (BuildContext context) {

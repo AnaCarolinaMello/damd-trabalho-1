@@ -6,6 +6,7 @@ class User {
   final String name;
   final String email;
   final String? password;
+  final String? token;
   
   User({
     this.id,
@@ -13,6 +14,7 @@ class User {
     required this.name,
     required this.email,
     this.password,
+    this.token,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class User {
       type: _getUserTypeFromString(json['type']),
       name: json['name'],
       email: json['email'],
+      token: json['token'],
     );
   }
 
@@ -31,6 +34,7 @@ class User {
       'name': name,
       'email': email,
       'password': password ?? '',
+      'token': token,
     };
   }
   

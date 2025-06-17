@@ -25,7 +25,12 @@ class UserController {
   }
 
   static Future<User?> getUserById(int id) async {
-    return await databaseService.getUser(id);
+    try {
+      final response = await ApiService.get('$path/$id');
+      return User.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      return await databaseService.getUser(id);
+    }
   }
 
   static Future<User?> createUser(User user) async {

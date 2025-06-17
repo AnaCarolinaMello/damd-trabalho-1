@@ -1,14 +1,16 @@
 import 'dart:async';
 
 import 'package:damd_trabalho_1/models/Driver.dart' as DriverModel;
+import 'package:damd_trabalho_1/models/enum/Status.dart';
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/views/map/components/Driver.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
-import 'package:damd_trabalho_1/controllers/driver.dart';
+import 'package:damd_trabalho_1/controllers/user.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:damd_trabalho_1/services/Route.dart';
+import 'package:damd_trabalho_1/controllers/tracking.dart';
 
 class Tracking extends StatefulWidget {
   final Order order;
@@ -40,6 +42,9 @@ class _TrackingState extends State<Tracking> {
   StreamSubscription<Position>? _locationSubscription;
   bool _useRealTimeLocation = false;
 
+  // Tracking service integration
+  Timer? _trackingUpdateTimer;
+
   void _onMapCreated(GoogleMapController controller) async {
     mapController = controller;
   }
@@ -47,9 +52,11 @@ class _TrackingState extends State<Tracking> {
   void init() async {
     await getDriver();
     await getAddress();
+    await updateDriverLocationFromService();
     await setupRouteSimulation();
     await getRouteDuration();
     getMakers();
+    await initializeTracking();
   }
 
   void getMakers() {
@@ -146,6 +153,7 @@ class _TrackingState extends State<Tracking> {
   /// Update the driver's marker with a new position
   void updateDriverMarker(LatLng position) {
     setState(() {
+      print('position: $position');
       _location = position;
 
       // Update the marker
@@ -165,17 +173,92 @@ class _TrackingState extends State<Tracking> {
 
     // Recalculate route duration if needed
     updateRouteDuration();
+
+    // Update tracking service with new position
+    updateTrackingService(position);
+  }
+
+  /// Initialize tracking service integration
+  Future<void> initializeTracking() async {
+    try {
+      if (widget.order.driverId != null && widget.order.customerId != null) {
+        // Create initial tracking record
+        await TrackingService.updateDeliveryStatus(
+          orderId: widget.order.id!,
+          driverId: widget.order.driverId!,
+          customerId: widget.order.customerId,
+          status: Status.accepted,
+          latitude: _destination.latitude,
+          longitude: _destination.longitude,
+          destinationAddress: widget.order.address.fullAddress,
+          notes: 'Entrega iniciada',
+        );
+
+        // Start periodic updates to get real driver location
+        startTrackingUpdates();
+      }
+    } catch (e) {
+      print('Error initializing tracking: $e');
+    }
+  }
+
+  /// Start periodic updates from tracking service
+  void startTrackingUpdates() {
+    _trackingUpdateTimer?.cancel();
+
+    _trackingUpdateTimer = Timer.periodic(const Duration(minutes: 2), (
+      timer,
+    ) async {
+      await updateDriverLocationFromService();
+    });
+  }
+
+  /// Update driver location from tracking service
+  Future<void> updateDriverLocationFromService() async {
+    try {
+      if (widget.order.driverId != null) {
+        final location = await TrackingService.getDriverLocation(
+          widget.order.driverId!,
+        );
+        if (location['latitude'] != null && location['longitude'] != null) {
+          final newPosition = LatLng(
+            double.parse(location['latitude'].toString()),
+            double.parse(location['longitude'].toString()),
+          );
+          // Only update if we're not using real-time GPS
+          updateDriverMarker(newPosition);
+        }
+      }
+    } catch (e) {
+      print('Error getting driver location from service: $e');
+    }
+  }
+
+  /// Update tracking service with current position
+  Future<void> updateTrackingService(LatLng position) async {
+    try {
+      if (widget.order.driverId != null && _useRealTimeLocation) {
+        await TrackingService.updateDriverLocation(
+          driverId: widget.order.driverId!,
+          orderId: widget.order.id,
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
+      }
+    } catch (e) {
+      print('Error updating tracking service: $e');
+    }
   }
 
   /// Update the route duration based on new driver position
   Future<void> updateRouteDuration() async {
     try {
-      final duration = await RouteService.getRouteDuration(
-        _location,
-        _destination,
+      final duration = await TrackingService.calculateETA(
+        widget.order.id!,
+        widget.order.driverId!,
       );
       setState(() {
-        driver?.arrivalTime = duration?.time;
+        driver?.arrivalTime = '${duration['eta_minutes']} min';
       });
     } catch (e) {
       print('Error updating route duration: $e');
@@ -199,7 +282,7 @@ class _TrackingState extends State<Tracking> {
       drawPolyline();
 
       // Start the simulation
-      startSimulation();
+      // startSimulation();
     } catch (e) {
       print('Error setting up route simulation: $e');
     }
@@ -241,7 +324,8 @@ class _TrackingState extends State<Tracking> {
       (timer) async {
         // Update progress
         setState(() {
-          _simulationProgress += _simulationUpdateInterval / _simulationDuration;
+          _simulationProgress +=
+              _simulationUpdateInterval / _simulationDuration;
 
           // Reset when complete
           if (_simulationProgress >= 1.0) {
@@ -292,19 +376,20 @@ class _TrackingState extends State<Tracking> {
 
   Future<void> getDriver() async {
     final driverId = widget.order.driverId;
-    final orderDriver = await DriverController.getDriver(driverId!);
+    final orderDriver = await UserController.getUserById(driverId!);
     setState(() {
-      driver = orderDriver;
+      driver = DriverModel.Driver.fromJson(orderDriver!.toJson());
+      print('driver: ${driver?.id}');
     });
   }
 
   Future<void> getRouteDuration() async {
     try {
-      final duration = await RouteService.getRouteDuration(
-        _location,
-        _destination,
+      final duration = await TrackingService.calculateETA(
+        widget.order.id!,
+        widget.order.driverId!,
       );
-      driver?.arrivalTime = duration?.time;
+      driver?.arrivalTime = '${duration['eta_minutes']} min';
     } catch (e) {
       print('Error getting route duration: $e');
     }
@@ -322,6 +407,8 @@ class _TrackingState extends State<Tracking> {
     _simulationTimer?.cancel();
     // Cancel location subscription
     _locationSubscription?.cancel();
+    // Cancel tracking updates
+    _trackingUpdateTimer?.cancel();
     super.dispose();
   }
 
