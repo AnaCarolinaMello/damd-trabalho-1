@@ -1,6 +1,6 @@
 export const publicRoutes = [
     '/auth/login',
-    '/auth/',
+    '/auth',
     '/auth/health',
     '/order/health',
     '/tracking/health',

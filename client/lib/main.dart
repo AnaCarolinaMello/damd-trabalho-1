@@ -77,7 +77,7 @@ class _MyApp extends State<MyApp> {
             home:
                 loading
                     ? const Center(child: CircularProgressIndicator())
-                    : user != null
+                    : user.isNotEmpty
                     ? MainScreen()
                     : const WelcomePage(),
           ),
