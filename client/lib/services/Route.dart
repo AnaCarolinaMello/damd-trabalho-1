@@ -1,3 +1,5 @@
+import 'package:damd_trabalho_1/models/Address.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -9,7 +11,7 @@ import 'package:google_maps_polyline/src/point_latlng.dart';
 import 'package:google_maps_polyline/src/utils/my_request_enums.dart';
 
 class RouteService {
-  static const String apiKey = "AIzaSyDh5g6NowzzcUz-6K01CY3PoSIc_pXa4OM";
+  static const String apiKey = "<YOUR_API_KEY>";
   static final Map<String, List<LatLng>> _routeCache = {};
   static final Map<String, String> _gpxPathCache = {};
   static final GoogleMapsPolyline _polyline = GoogleMapsPolyline();
@@ -47,7 +49,8 @@ class RouteService {
     LatLng destination,
   ) async {
     // Create a unique key for this route
-    final routeKey = '${origin.latitude},${origin.longitude}-${destination.latitude},${destination.longitude}';
+    final routeKey =
+        '${origin.latitude},${origin.longitude}-${destination.latitude},${destination.longitude}';
 
     // Check if route is cached
     if (_routeCache.containsKey(routeKey)) {
@@ -85,7 +88,8 @@ class RouteService {
     String routeId,
   ) async {
     // Create a unique key for this route
-    final routeKey = '${origin.latitude},${origin.longitude}-${destination.latitude},${destination.longitude}';
+    final routeKey =
+        '${origin.latitude},${origin.longitude}-${destination.latitude},${destination.longitude}';
 
     // Check if GPX path is cached
     if (_gpxPathCache.containsKey(routeKey)) {
@@ -111,5 +115,10 @@ class RouteService {
   ) async {
     final routePoints = await GPXService.getPointsFromGpx(gpxFilePath);
     return GPXService.getPositionAtProgress(routePoints, progress);
+  }
+
+  static Future<LatLng> getLatAndLngByAddress(Address address) async {
+    List<Location> locations = await locationFromAddress(address.fullAddress);
+    return LatLng(locations.first.latitude, locations.first.longitude);
   }
 }

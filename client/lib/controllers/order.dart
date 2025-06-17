@@ -7,6 +7,8 @@ import 'package:damd_trabalho_1/models/enum/Status.dart';
 import 'package:damd_trabalho_1/services/Database.dart';
 import 'package:damd_trabalho_1/services/Api.dart';
 import 'package:damd_trabalho_1/controllers/tracking.dart';
+import 'package:damd_trabalho_1/services/Route.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class OrderController {
   static final path = 'order';
@@ -34,7 +36,7 @@ class OrderController {
         OrderItem(name: 'Sovermesa', price: 12.90, quantity: 1),
       ],
       customerId: 1,
-    )
+    ),
   ];
 
   static Future<List<Order>> getOrders(int userId) async {
@@ -82,7 +84,7 @@ class OrderController {
         'photo': imageBytes,
         'userId': userId,
       });
-      
+
       // Update tracking when order is delivered
       await TrackingService.updateDeliveryStatus(
         orderId: orderId,
@@ -91,18 +93,20 @@ class OrderController {
         notes: 'Pedido entregue com sucesso',
       );
     } catch (e) {
-      print('error delivering order: $e and orderId: $orderId and userId: $userId');
+      print(
+        'error delivering order: $e and orderId: $orderId and userId: $userId',
+      );
       await databaseService.finishOrder(orderId, imageBytes);
     }
   }
 
   static Future<void> cancelOrder(int orderId, int userId) async {
     try {
-      await ApiService.post('$path/cancel/$orderId', {
-        'userId': userId,
-      });
+      await ApiService.post('$path/cancel/$orderId', {'userId': userId});
     } catch (e) {
-      print('error canceling order: $e and orderId: $orderId and userId: $userId');
+      print(
+        'error canceling order: $e and orderId: $orderId and userId: $userId',
+      );
       await databaseService.updateOrderStatus(orderId, Status.cancelled);
     }
   }
@@ -110,7 +114,16 @@ class OrderController {
   static Future<List<Order>> getAvailableOrders() async {
     try {
       final response = await ApiService.get('$path/available');
-      return response.map<Order>((order) => Order.fromJson(order)).toList();
+      final nearByOrders = await TrackingService.getNearbyDeliveries();
+      print('nearByOrders: $nearByOrders');
+      return response
+          .map<Order>((order) => Order.fromJson(order))
+          .where(
+            (order) => nearByOrders.any(
+              (nearByOrder) => nearByOrder['order_id'] == order.id,
+            ),
+          )
+          .toList();
     } catch (e) {
       return await databaseService.getOrdersByStatus(Status.pending);
     }
@@ -121,7 +134,8 @@ class OrderController {
       name: order.name,
       description: order.description,
       date: DateTime.now().toIso8601String(),
-      time: "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
+      time:
+          "${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
       status: Status.pending,
       items: order.items,
       address: order.address,
@@ -131,6 +145,15 @@ class OrderController {
     );
     try {
       final response = await ApiService.post(path, newOrder.toJson());
+      LatLng latLng = await RouteService.getLatAndLngByAddress(order.address);
+      await TrackingService.updateDeliveryStatus(
+        orderId: response['id'],
+        driverId: userId,
+        latitude: latLng.latitude,
+        longitude: latLng.longitude,
+        status: Status.pending,
+        destinationAddress: order.address.fullAddress,
+      );
       return Order.fromJson(response);
     } catch (e) {
       return await databaseService.createOrder(newOrder, userId);
@@ -164,8 +187,11 @@ class OrderController {
   }
 
   // Tracking-related methods
-  
-  static Future<Map<String, dynamic>?> getOrderTracking(int orderId, int customerId) async {
+
+  static Future<Map<String, dynamic>?> getOrderTracking(
+    int orderId,
+    int customerId,
+  ) async {
     try {
       return await TrackingService.getDeliveryLocation(orderId, customerId);
     } catch (e) {
@@ -183,7 +209,10 @@ class OrderController {
     }
   }
 
-  static Future<Map<String, dynamic>?> calculateOrderETA(int orderId, int driverId) async {
+  static Future<Map<String, dynamic>?> calculateOrderETA(
+    int orderId,
+    int driverId,
+  ) async {
     try {
       return await TrackingService.calculateETA(orderId, driverId);
     } catch (e) {

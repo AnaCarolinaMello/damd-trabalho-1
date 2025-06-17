@@ -1,5 +1,6 @@
 import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'package:damd_trabalho_1/models/enum/Status.dart';
+import 'package:damd_trabalho_1/services/Route.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
@@ -13,6 +14,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:damd_trabalho_1/views/main/MainScreen.dart';
+import 'package:damd_trabalho_1/views/map/pages/Route.dart';
 
 class DeliveryCard extends StatefulWidget {
   final Order? order;
@@ -36,12 +38,7 @@ class _DeliveryCardState extends State<DeliveryCard> {
     List<Location> locations = await locationFromAddress(
       widget.order!.address.fullAddress,
     );
-    final latLng = LatLng(
-        locations.first.latitude,
-        locations.first.longitude,
-      );
-    print('latLng: ${latLng.latitude}, ${latLng.longitude}');
-    print('position: ${position.latitude}, ${position.longitude}');
+    final latLng = await RouteService.getLatAndLngByAddress(widget.order!.address);
 
     await OrderController.acceptOrder(widget.order!.id!, user.id!);
     await TrackingService.updateDeliveryStatus(
@@ -178,15 +175,12 @@ class _DeliveryCardState extends State<DeliveryCard> {
                   label: 'Ver rota',
                   icon: Icons.map_outlined,
                   onTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => OrderDetail(
-                    //       orderId: order.id,
-                    //       isActive: isActive,
-                    //     ),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RoutePage(order: widget.order!),
+                      ),
+                    );
                   },
                 ),
                 ActionButton(

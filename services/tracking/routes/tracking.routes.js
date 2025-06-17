@@ -16,11 +16,9 @@ const router = express.Router();
 // Driver location endpoints
 router.post('/location', async (req, res) => {
     try {
-        console.log('updateDriverLocation', req.body);
         const location = await updateDriverLocation(req.body);
         return200(location, res);
     } catch (error) {
-        console.log(error);
         return500(error, req, res);
     }
 });
@@ -57,11 +55,9 @@ router.get('/history/:orderId/user/:userId', async (req, res) => {
 // Delivery status endpoints
 router.post('/status', async (req, res) => {
     try {
-        console.log(req.body);
         const status = await updateDeliveryStatus(req.body);
         return200(status, res);
     } catch (error) {
-        console.log(error);
         return500(error, req, res);
     }
 });
@@ -80,7 +76,8 @@ router.get('/nearby', async (req, res) => {
 // ETA calculation
 router.get('/eta/:orderId/driver/:driverId', async (req, res) => {
     try {
-        const eta = await calculateETA(req.params.orderId, req.params.driverId);
+        const { latitude, longitude } = req.query;
+        const eta = await calculateETA(req.params.orderId, req.params.driverId, latitude, longitude);
         return200(eta, res);
     } catch (error) {
         console.log(error);

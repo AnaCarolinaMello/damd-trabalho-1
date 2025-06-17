@@ -67,14 +67,15 @@ export async function findNearbyDeliveries(latitude, longitude, radiusKm = 5) {
     const result = await pool.query(
         `
     SELECT dt.*,
-           ST_Distance(ST_GeogFromText('POINT(' || $2 || ' ' || $1 || ')'), location::geography) / 1000 as distance_km
+           ST_Distance(ST_GeogFromText('POINT(' || $1 || ' ' || $2 || ')'),
+           ST_GeogFromText('POINT(' || dt.longitude || ' ' || dt.latitude || ')')) / 1000 as distance_km
     FROM delivery_tracking dt
     WHERE ST_DWithin(
-      ST_GeogFromText('POINT(' || $2 || ' ' || $1 || ')'),
-      location::geography,
+      ST_GeogFromText('POINT(' || $1 || ' ' || $2 || ')'),
+      ST_GeogFromText('POINT(' || dt.longitude || ' ' || dt.latitude || ')'),
       $3 * 1000
     )
-    AND status IN ('accepted', 'preparing', 'pending')
+    AND status IN ('preparing', 'pending')
     ORDER BY distance_km
   `,
         [latitude, longitude, radiusKm]

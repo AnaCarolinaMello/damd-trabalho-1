@@ -91,13 +91,10 @@ class TrackingService {
   }
 
   // Get nearby deliveries
-  static Future<List<dynamic>> getNearbyDeliveries({
-    required double latitude,
-    required double longitude,
-    double radius = 5.0,
-  }) async {
+  static Future<List<dynamic>> getNearbyDeliveries() async {
     try {
-      final query = 'latitude=$latitude&longitude=$longitude&radius=$radius';
+      final position = await getCurrentLocation();
+      final query = 'latitude=${position.latitude}&longitude=${position.longitude}&radius=20000.0';
       return await ApiService.get('$_trackingPath/nearby?$query');
     } catch (e) {
       throw Exception('Failed to get nearby deliveries: $e');
@@ -105,9 +102,9 @@ class TrackingService {
   }
 
   // Calculate ETA
-  static Future<Map<String, dynamic>> calculateETA(int orderId, int driverId) async {
+  static Future<Map<String, dynamic>> calculateETA(int orderId, int driverId, {double? latitude, double? longitude}) async {
     try {
-      final response = await ApiService.get('$_trackingPath/eta/$orderId/driver/$driverId');
+      final response = await ApiService.get('$_trackingPath/eta/$orderId/driver/$driverId?latitude=${latitude ?? 0.0}&longitude=${longitude ?? 0.0}');
       print('response: $response');
       return response;
     } catch (e) {

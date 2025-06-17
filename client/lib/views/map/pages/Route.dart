@@ -153,7 +153,7 @@ class _RouteState extends State<RoutePage> {
     );
 
     // Update the marker with current position
-    updateDriverMarker(LatLng(position.latitude, position.longitude));
+    await updateDriverMarker(LatLng(position.latitude, position.longitude));
 
     // Subscribe to location updates
     _locationSubscription = Geolocator.getPositionStream(
@@ -161,10 +161,10 @@ class _RouteState extends State<RoutePage> {
         accuracy: LocationAccuracy.high,
         distanceFilter: 10, // Update every 10 meters
       ),
-    ).listen((Position position) {
+    ).listen((Position position) async {
       if (_useRealTimeLocation) {
         // Update driver position with real GPS location
-        updateDriverMarker(LatLng(position.latitude, position.longitude));
+        await updateDriverMarker(LatLng(position.latitude, position.longitude));
       }
     });
   }
@@ -178,7 +178,7 @@ class _RouteState extends State<RoutePage> {
   }
 
   /// Update the driver's marker with a new position
-  void updateDriverMarker(LatLng position) {
+  Future<void> updateDriverMarker(LatLng position) async {
     setState(() {
       _location = position;
 
@@ -208,6 +208,8 @@ class _RouteState extends State<RoutePage> {
       final timeDistance = await TrackingService.calculateETA(
         widget.order.id!,
         widget.order.driverId!,
+        latitude: position.latitude,
+        longitude: position.longitude,
       );
       setState(() {
         print('timeDistance: ${timeDistance['eta_minutes']}');
@@ -397,9 +399,12 @@ class _RouteState extends State<RoutePage> {
 
   Future<void> getRouteDuration() async {
     try {
+      print("position: ${_location.longitude}");
       final timeDistance = await TrackingService.calculateETA(
         widget.order.id!,
-        widget.order.driverId!,
+        widget.order.driverId ?? 0,
+        latitude: _location.latitude,
+        longitude: _location.longitude
       );
       setState(() {
         _timeDistance = TimeModel(

@@ -99,16 +99,9 @@ router.post("/cancel/:id", async (req, res) => {
 
 router.post("/rate/:id", async (req, res) => {
   try {
-    console.log('POST /rate/:id - Headers:', req.headers);
-    console.log('POST /rate/:id - Content-Type:', req.get('Content-Type'));
-    console.log('POST /rate/:id - Params:', req.params);
-    console.log('POST /rate/:id - Body:', req.body);
-    
     const order = await rateOrder(req.params.id, req.body.userId, req.body.rating);
     return200(order, res);
   } catch (error) {
-    console.error('POST /rate/:id - Error:', error.message);
-    console.error('POST /rate/:id - Stack:', error.stack);
     return500(error, req, res);
   }
 });
