@@ -52,26 +52,26 @@ export async function updateEntity(id, obj, entity) {
     return result.rows[0];
 }
 
-export function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+export async function calculateDistance(lat1, lon1, lat2, lon2) {
+    const result = await pool.query(
+        `SELECT ST_Distance(
+            ST_GeogFromText('POINT(' || $2 || ' ' || $1 || ')'),
+            ST_GeogFromText('POINT(' || $4 || ' ' || $3 || ')')
+        ) / 1000 as distance_km`,
+        [lat1, lon1, lat2, lon2]
+    );
+    return result.rows[0].distance_km;
 }
 
 export async function findNearbyDeliveries(latitude, longitude, radiusKm = 5) {
     const result = await pool.query(
         `
     SELECT dt.*,
-           ST_Distance(ST_GeogFromText('POINT(' || $1 || ' ' || $2 || ')'),
+           ST_Distance(ST_GeogFromText('POINT(' || $2 || ' ' || $1 || ')'),
            ST_GeogFromText('POINT(' || dt.longitude || ' ' || dt.latitude || ')')) / 1000 as distance_km
     FROM delivery_tracking dt
     WHERE ST_DWithin(
-      ST_GeogFromText('POINT(' || $1 || ' ' || $2 || ')'),
+      ST_GeogFromText('POINT(' || $2 || ' ' || $1 || ')'),
       ST_GeogFromText('POINT(' || dt.longitude || ' ' || dt.latitude || ')'),
       $3 * 1000
     )
