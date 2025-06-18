@@ -39,7 +39,7 @@ class _MainScreenState extends State<MainScreen> {
           activeIcon: Icons.home,
           value: 'home',
           label: 'Home',
-          screen: const Text('Home'),
+          screen: const SizedBox(),
         ),
         NavItemModel(
           icon: Icons.receipt_long,
