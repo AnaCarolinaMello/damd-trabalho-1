@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:damd_trabalho_1/views/order/components/OrderList.dart';
+import 'package:damd_trabalho_1/views/order/pages/CreateOrder.dart';
 import 'package:damd_trabalho_1/models/Order.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
 import 'package:damd_trabalho_1/models/enum/Status.dart';
@@ -157,6 +158,20 @@ class _OrdersState extends State<Orders> with SingleTickerProviderStateMixin, Wi
             rateOrder: rateOrder,
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateOrderPage()),
+          );
+          // Recarrega os pedidos quando voltar da tela de criar
+          if (result != null) {
+            await getOrders();
+          }
+        },
+        child: const Icon(Icons.add),
+        tooltip: 'Criar Pedido',
       ),
     );
   }
