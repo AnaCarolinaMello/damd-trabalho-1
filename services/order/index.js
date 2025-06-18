@@ -20,17 +20,7 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Error handling middleware for body parsing
-app.use((error, req, res, next) => {
-  if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
-    console.error('Bad JSON:', error.message);
-    return res.status(400).json({ error: 'Invalid JSON' });
-  }
-  next();
-});
+app.use(express.json());
 
 // Health check endpoint
 app.get("/health", (_, res) => {
