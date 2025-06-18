@@ -36,26 +36,13 @@ export async function getEntity(id, entity, fields = "*", where = {}) {
 }
 
 export async function addEntity(obj, entity) {
-  // Remove id field if it exists (let database auto-generate)
-  const cleanObj = { ...obj };
-  delete cleanObj.id;
-  
-  // Remove null/undefined values to avoid database constraints
-  Object.keys(cleanObj).forEach(key => {
-    if (cleanObj[key] === null || cleanObj[key] === undefined || cleanObj[key] === '') {
-      delete cleanObj[key];
-    }
-  });
-  
-  const fields = Object.keys(cleanObj)
+  const fields = Object.keys(obj)
     .map((field) => `"${field}"`)
     .join(", ");
-  const indexs = Object.keys(cleanObj)
+  const indexs = Object.keys(obj)
     .map((_, index) => `$${index + 1}`)
     .join(", ");
-  const values = Object.values(cleanObj);
-
-  console.log(`INSERT INTO ${entity}:`, { fields, values });
+  const values = Object.values(obj);
 
   const query = `INSERT INTO ${entity} (${fields}) VALUES (${indexs}) RETURNING *`;
   const result = await pool.query(query, values);
