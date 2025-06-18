@@ -1,3 +1,4 @@
+import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:damd_trabalho_1/components/Input.dart';
@@ -12,7 +13,6 @@ import 'package:damd_trabalho_1/models/enum/Status.dart';
 import 'package:damd_trabalho_1/controllers/order.dart';
 import 'package:damd_trabalho_1/theme/Tokens.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:damd_trabalho_1/views/order/pages/Orders.dart';
 
 class CreateOrderPage extends StatefulWidget {
   const CreateOrderPage({super.key});
@@ -51,68 +51,68 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
   @override
   void initState() {
     super.initState();
-    
+
     // Add listeners to update the UI when any field changes
     _nameController.addListener(() {
       setState(() {});
     });
-    
+
     _descriptionController.addListener(() {
       setState(() {});
     });
-    
+
     _deliveryFeeController.addListener(() {
       setState(() {});
     });
-    
+
     _discountController.addListener(() {
       setState(() {});
     });
-    
+
     _streetController.addListener(() {
       setState(() {});
     });
-    
+
     _numberController.addListener(() {
       setState(() {});
     });
-    
+
     _neighborhoodController.addListener(() {
       setState(() {});
     });
-    
+
     _cityController.addListener(() {
       setState(() {});
     });
-    
+
     _stateController.addListener(() {
       setState(() {});
     });
-    
+
     _zipCodeController.addListener(() {
       setState(() {});
     });
-    
+
     _streetController.addListener(() {
       setState(() {});
     });
-    
+
     _numberController.addListener(() {
       setState(() {});
     });
-    
+
     _neighborhoodController.addListener(() {
       setState(() {});
     });
-    
+
     _cityController.addListener(() {
       setState(() {});
     });
-    
+
     _stateController.addListener(() {
       setState(() {});
     });
-    
+
     _zipCodeController.addListener(() {
       setState(() {});
     });
@@ -148,12 +148,14 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
 
       if (price > 0 && quantity > 0) {
         setState(() {
-          _orderItems.add(OrderItem(
-            name: _itemNameController.text,
-            price: price,
-            quantity: quantity,
-            description: _itemDescriptionController.text,
-          ));
+          _orderItems.add(
+            OrderItem(
+              name: _itemNameController.text,
+              price: price,
+              quantity: quantity,
+              description: _itemDescriptionController.text,
+            ),
+          );
         });
 
         // Clear item form
@@ -167,12 +169,16 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preço e quantidade devem ser maiores que zero')),
+          const SnackBar(
+            content: Text('Preço e quantidade devem ser maiores que zero'),
+          ),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha nome, preço e quantidade do item')),
+        const SnackBar(
+          content: Text('Preencha nome, preço e quantidade do item'),
+        ),
       );
     }
   }
@@ -181,15 +187,15 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
     setState(() {
       _orderItems.removeAt(index);
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Item removido do pedido')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Item removido do pedido')));
   }
 
   Future<User?> _getCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();
     final userString = prefs.getString('user');
-    
+
     if (userString != null && userString.isNotEmpty) {
       try {
         return User.fromJson(jsonDecode(userString));
@@ -247,13 +253,18 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Pedido criado com sucesso!')),
         );
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Orders()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainScreen(item: 'orders'),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao criar pedido: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao criar pedido: $e')));
       }
     } finally {
       if (mounted) {
@@ -265,7 +276,10 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
   }
 
   double get _totalPrice {
-    return _orderItems.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+    return _orderItems.fold(
+      0.0,
+      (sum, item) => sum + (item.price * item.quantity),
+    );
   }
 
   double get _finalTotal {
@@ -452,7 +466,7 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
             onPressed: _addOrderItem,
             variant: ButtonVariant.outline,
           ),
-          
+
           if (_orderItems.isNotEmpty) ...[
             const SizedBox(height: Tokens.spacing20),
             const Divider(),
@@ -466,19 +480,22 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
               ),
             ),
             const SizedBox(height: Tokens.spacing12),
-            
+
             // List of added items
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _orderItems.length,
-              separatorBuilder: (context, index) => const SizedBox(height: Tokens.spacing8),
+              separatorBuilder:
+                  (context, index) => const SizedBox(height: Tokens.spacing8),
               itemBuilder: (context, index) {
                 final item = _orderItems[index];
                 return Container(
                   padding: const EdgeInsets.all(Tokens.spacing12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Theme.of(context).colorScheme.outline),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                     borderRadius: BorderRadius.circular(Tokens.radius8),
                   ),
                   child: Row(
@@ -501,7 +518,10 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                                 item.description,
                                 style: TextStyle(
                                   fontSize: Tokens.fontSize12,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -593,7 +613,9 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                   Text('${_streetController.text}, ${_numberController.text}'),
                   if (_complementController.text.isNotEmpty)
                     Text('${_complementController.text}'),
-                  Text('${_neighborhoodController.text}, ${_cityController.text} - ${_stateController.text}'),
+                  Text(
+                    '${_neighborhoodController.text}, ${_cityController.text} - ${_stateController.text}',
+                  ),
                   Text('CEP: ${_zipCodeController.text}'),
                 ],
               ),
@@ -617,14 +639,16 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                     ),
                   ),
                   const SizedBox(height: Tokens.spacing12),
-                  
+
                   // Items list
                   if (_orderItems.isNotEmpty) ...[
                     ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _orderItems.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: Tokens.spacing8),
+                      separatorBuilder:
+                          (context, index) =>
+                              const SizedBox(height: Tokens.spacing8),
                       itemBuilder: (context, index) {
                         final item = _orderItems[index];
                         return Row(
@@ -635,7 +659,8 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                                 '${item.quantity}x ${item.name}',
                                 style: TextStyle(
                                   fontSize: Tokens.fontSize14,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -654,7 +679,7 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                     const Divider(),
                     const SizedBox(height: Tokens.spacing12),
                   ],
-                  
+
                   // Order summary
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -695,7 +720,8 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                       ),
                     ],
                   ),
-                  if ((double.tryParse(_discountController.text) ?? 0.0) > 0) ...[
+                  if ((double.tryParse(_discountController.text) ?? 0.0) >
+                      0) ...[
                     const SizedBox(height: Tokens.spacing8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -753,14 +779,15 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
   bool _canContinue() {
     switch (_currentStep) {
       case 0: // Order Info
-        return _nameController.text.isNotEmpty && _descriptionController.text.isNotEmpty;
+        return _nameController.text.isNotEmpty &&
+            _descriptionController.text.isNotEmpty;
       case 1: // Address
-        return _streetController.text.isNotEmpty && 
-               _numberController.text.isNotEmpty &&
-               _neighborhoodController.text.isNotEmpty &&
-               _cityController.text.isNotEmpty &&
-               _stateController.text.isNotEmpty &&
-               _zipCodeController.text.isNotEmpty;
+        return _streetController.text.isNotEmpty &&
+            _numberController.text.isNotEmpty &&
+            _neighborhoodController.text.isNotEmpty &&
+            _cityController.text.isNotEmpty &&
+            _stateController.text.isNotEmpty &&
+            _zipCodeController.text.isNotEmpty;
       case 2: // Items
         return _orderItems.isNotEmpty;
       case 3: // Overview
@@ -788,23 +815,27 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
               children: [
                 if (_currentStep < 3)
                   ElevatedButton(
-                    onPressed: _canContinue() ? () {
-                      setState(() {
-                        _currentStep++;
-                      });
-                    } : null,
+                    onPressed:
+                        _canContinue()
+                            ? () {
+                              setState(() {
+                                _currentStep++;
+                              });
+                            }
+                            : null,
                     child: const Text('Continuar'),
                   ),
                 if (_currentStep == 3)
                   ElevatedButton(
                     onPressed: _isLoading ? null : _createOrder,
-                    child: _isLoading 
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Criar Pedido'),
+                    child:
+                        _isLoading
+                            ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                            : const Text('Criar Pedido'),
                   ),
                 const SizedBox(width: Tokens.spacing8),
                 if (_currentStep > 0)
@@ -830,15 +861,23 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
               title: const Text('Endereço'),
               content: _buildAddressStep(),
               isActive: _currentStep >= 1,
-              state: _currentStep > 1 ? StepState.complete : 
-                     _currentStep == 1 ? StepState.indexed : StepState.disabled,
+              state:
+                  _currentStep > 1
+                      ? StepState.complete
+                      : _currentStep == 1
+                      ? StepState.indexed
+                      : StepState.disabled,
             ),
             Step(
               title: const Text('Itens'),
               content: _buildItemsStep(),
               isActive: _currentStep >= 2,
-              state: _currentStep > 2 ? StepState.complete : 
-                     _currentStep == 2 ? StepState.indexed : StepState.disabled,
+              state:
+                  _currentStep > 2
+                      ? StepState.complete
+                      : _currentStep == 2
+                      ? StepState.indexed
+                      : StepState.disabled,
             ),
             Step(
               title: const Text('Revisão'),
