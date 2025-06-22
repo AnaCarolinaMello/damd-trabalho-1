@@ -231,7 +231,8 @@ class _FinishDeliveryState extends State<FinishDelivery> {
                   child: CustomIconButton(
                     icon: Icons.check_circle_outline,
                     label: 'Confirmar Entrega',
-                    onPressed: _isSubmitting ? () {} : () => _submitDelivery(),
+                    onPressed: _submitDelivery,
+                    loading: _isSubmitting,
                   ),
                 ),
               ],
