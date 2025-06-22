@@ -144,7 +144,7 @@ class _FinishDeliveryState extends State<FinishDelivery> {
                   Navigator.of(context).pop(); // Fecha o dialog
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (_) => const MainScreen()),
+                    MaterialPageRoute(builder: (_) => const MainScreen(item: 'orders')),
                   );
                 },
               ),
