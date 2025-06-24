@@ -1,9 +1,11 @@
-import {
-  getEntity,
-  addEntity,
-  updateEntity,
-  query,
-} from "../util/index.js";
+import { getEntity, addEntity, updateEntity, query } from "../util/index.js";
+import conectarRabbitMQ from "../util/amqp.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const exchangeName = process.env.RABBITMQ_EXCHANGE_NAME;
+const routingKey = process.env.RABBITMQ_ROUTING_KEY;
 
 const defaultQuery = `
   SELECT o.*, json_build_object('street', a.street, 'number', a.number, 'complement', a.complement, 'neighborhood', a.neighborhood, 'city', a.city, 'state', a.state, 'zipCode', a.zip_code) as address, json_agg(json_build_object('id', i.id, 'name', i.name, 'description', i.description, 'price', i.price, 'quantity', i.quantity)) as items FROM orders o JOIN addresses a ON o.address_id = a.id LEFT JOIN order_items i ON o.id = i.order_id GROUP BY o.id, a.street, a.number, a.complement, a.neighborhood, a.city, a.state, a.zip_code
@@ -45,7 +47,10 @@ export async function getAvailableOrders() {
 
 export async function getDriverOrder(driverId) {
   const orders = await query(
-    defaultQuery.replace("GROUP BY", "WHERE o.driver_id = $1 AND o.status = $2 GROUP BY"),
+    defaultQuery.replace(
+      "GROUP BY",
+      "WHERE o.driver_id = $1 AND o.status = $2 GROUP BY"
+    ),
     [driverId, "accepted"]
   );
 
@@ -98,9 +103,10 @@ export async function deliverOrder(orderId, userId, photo) {
   const order = await getEntity(orderId, "orders");
   if (!order) throw new Error("Order not found");
   if (order.status !== "accepted") throw new Error("Order is not in delivery");
-  if (order.driver_id != userId) throw new Error("You are not the driver of this order");
+  if (order.driver_id != userId)
+    throw new Error("You are not the driver of this order");
 
-  return await updateEntity(
+  const updatedOrder = await updateEntity(
     orderId,
     {
       status: "delivered",
@@ -108,6 +114,23 @@ export async function deliverOrder(orderId, userId, photo) {
     },
     "orders"
   );
+
+  const { connection, channel } = await conectarRabbitMQ();
+  channel.publish(
+    exchangeName,
+    routingKey,
+    Buffer.from(
+      JSON.stringify({
+        order_id: orderId,
+        customer_id: order.customer_id,
+        timestamp: new Date().toISOString(),
+      })
+    )
+  );
+  await channel.close();
+  await connection.close();
+
+  return updatedOrder;
 }
 
 export async function rateOrder(orderId, userId, rating) {

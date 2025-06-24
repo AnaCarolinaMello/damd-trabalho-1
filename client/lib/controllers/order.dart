@@ -9,6 +9,7 @@ import 'package:damd_trabalho_1/services/Api.dart';
 import 'package:damd_trabalho_1/controllers/tracking.dart';
 import 'package:damd_trabalho_1/services/Route.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:damd_trabalho_1/controllers/notification.dart';
 
 class OrderController {
   static final path = 'order';
@@ -92,6 +93,7 @@ class OrderController {
         status: Status.delivered,
         notes: 'Pedido entregue com sucesso',
       );
+      await NotificationController.createNotification();
     } catch (e) {
       print(
         'error delivering order: $e and orderId: $orderId and userId: $userId',
