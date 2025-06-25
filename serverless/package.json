@@ -1,0 +1,16 @@
+{
+    "name": "damd-serverless",
+    "version": "1.0.0",
+    "description": "",
+    "main": "src/{index.js,functions/*.js}",
+    "scripts": {
+        "start": "func start"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@azure/functions": "^4.5.0",
+        "firebase-admin": "^13.4.0"
+    }
+}
