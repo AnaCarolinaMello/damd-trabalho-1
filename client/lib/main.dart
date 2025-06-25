@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:damd_trabalho_1/services/ThemeNotifier.dart';
+import 'package:damd_trabalho_1/services/NotificationService.dart';
 import 'package:damd_trabalho_1/theme/Theme.dart';
 import 'package:damd_trabalho_1/views/main/MainScreen.dart';
 import 'package:damd_trabalho_1/views/setup/pages/Welcome.dart';
@@ -20,6 +23,24 @@ void main() async {
 
   // Initialize shared preferences
   await SharedPreferences.getInstance();
+
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("Firebase initialized successfully");
+  } catch (e) {
+    print("Error initializing Firebase: $e");
+  }
+
+  // Initialize notification service
+  try {
+    await NotificationService.initialize();
+    print("Notification service initialized successfully");
+  } catch (e) {
+    print("Error initializing notification service: $e");
+  }
 
   // Initialize database with error handling
   try {
@@ -45,7 +66,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyApp();
 }
 
-class _MyApp extends State<MyApp> {
+class _MyApp extends State<MyApp> with WidgetsBindingObserver {
   // This widget is the root of your application.
   late String user;
   bool loading = true;
@@ -61,7 +82,31 @@ class _MyApp extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     getUser();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    NotificationService.stopNotificationTimer();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        NotificationService.startNotificationTimer();
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        NotificationService.stopNotificationTimer();
+        break;
+      case AppLifecycleState.hidden:
+        break;
+    }
   }
 
   @override

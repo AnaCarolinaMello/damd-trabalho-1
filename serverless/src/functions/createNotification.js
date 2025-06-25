@@ -11,11 +11,12 @@ app.http('notifications-api', {
             const body = await request.json();
 
             const docRef = db.collection('notifications').doc();
+            console.log("body", body);
 
             const notification = {
-                clientId: body.clientId,
+                clientId: body.customer_id,
                 message: body.message,
-                orderId: body.orderId,
+                orderId: body.order_id,
                 sent: false,
                 title: body.title,
             };

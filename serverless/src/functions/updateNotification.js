@@ -4,48 +4,49 @@ const { db } = require('../firebase');
 app.http('update-notification', {
     methods: ['PUT'],
     authLevel: 'anonymous',
-    route: 'update-notification/{id}', // ID
+    route: 'update-notification/{id}',
     handler: async (request, context) => {
-        const id = context.request.params.id;
-
-        if (!id) {
-            return {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ error: 'ID da notificação não fornecido.' }),
-            };
-        }
-
         try {
-            const docRef = db.collection('notifications').doc(id);
-
-            // Check if document exists
-            const doc = await docRef.get();
-            if (!doc.exists) {
+            const id = request.params.id;
+            
+            if (!id) {
                 return {
-                    status: 404,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ error: 'Notificação não encontrada.' }),
+                    status: 400,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        error: 'ID is required',
+                    }),
                 };
             }
 
+            console.log('Updating notification with ID:', id);
+
+            const docRef = db.collection('notifications').doc(id);
             await docRef.update({ sent: true });
+
+            console.log('Notification updated successfully');
 
             return {
                 status: 200,
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
-                    message: 'Notificação atualizada com sucesso.',
-                    id,
+                    message: 'Notification updated successfully',
+                    id: id
                 }),
             };
         } catch (error) {
-            console.error('Erro ao atualizar notificação:', error);
+            console.error('Function error:', error);
             return {
                 status: 500,
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
-                    error: 'Erro interno ao atualizar notificação.',
+                    error: error.message,
                 }),
             };
         }

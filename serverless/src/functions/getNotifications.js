@@ -1,7 +1,7 @@
 const { app } = require('@azure/functions');
 const { db } = require('../firebase');
 
-app.http('get-notifications-api', {
+app.http('get-notifications', {
     methods: ['GET'],
     authLevel: 'anonymous',
     route: 'notifications/{clientId}',
