@@ -1,16 +1,5 @@
 const { app } = require('@azure/functions');
-
-const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
-const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
-const serviceAccount = require('../../../damd-17984-firebase-adminsdk-fbsvc-defc6c26b2.json')
-initializeApp(
-    {
-        credential: cert(serviceAccount),
-        databaseURL: 'https://damd-serverless-main.firebaseio.com'
-    }
-);
-
-const db = getFirestore();
+const { db } = require('../firebase');
 
 
 app.http('notifications-api', {
